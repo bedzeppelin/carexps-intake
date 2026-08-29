@@ -1,0 +1,21 @@
+{
+  "//": "Copy to config.json. install.ps1 does this for you and fills in the paths.",
+
+  "port": 8443,
+  "bindAddress": "0.0.0.0",
+
+  "outputDir": "C:\Users\Clinic\OneDrive - Clinic\Patient Forms",
+  "spoolDir": "./spool",
+  "logDir": "./logs",
+
+  "//tls": "Paths are relative to the service directory unless absolute.",
+  "tls": { "pfxPath": "./certs/desk-service.pfx", "passphrase": "" },
+
+  "//deviceTokens": "One per tablet. install.ps1 generates these; add more with -AddTablet.",
+  "deviceTokens": [],
+
+  "//alembico": "Left disabled until the API is confirmed. See src/alembico.js.",
+  "alembico": { "enabled": false, "baseUrl": "", "apiKey": "" },
+
+  "clinicName": "CareXPS Urgent Care"
+}

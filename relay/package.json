@@ -1,0 +1,15 @@
+{
+  "name": "carexps-intake-relay",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Receives intake submissions from off-LAN devices (the website embed and the QR-to-phone path) and delivers them to the clinic.",
+  "main": "src/functions/*.js",
+  "scripts": {
+    "start": "func start",
+    "test": "node test/relay.test.mjs"
+  },
+  "dependencies": {
+    "@azure/functions": "^4.5.0"
+  }
+}

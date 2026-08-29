@@ -1,0 +1,24 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+
+    "//": "Entra app registration with Mail.Send (and Files.ReadWrite.All for onedrive mode), admin-consented.",
+    "GRAPH_TENANT_ID": "",
+    "GRAPH_CLIENT_ID": "",
+    "GRAPH_CLIENT_SECRET": "",
+
+    "//sender": "The clinic mailbox the message is sent FROM and TO.",
+    "MAIL_SENDER": "intake@yourclinic.ca",
+    "MAIL_RECIPIENTS": "frontdesk@yourclinic.ca",
+
+    "//delivery": "email | onedrive. onedrive skips the email hop entirely.",
+    "DELIVERY_MODE": "email",
+    "ONEDRIVE_USER": "",
+    "ONEDRIVE_FOLDER": "Patient Forms/Web submissions",
+
+    "//cors": "Comma-separated origins allowed to POST here.",
+    "ALLOWED_ORIGINS": "https://www.yourclinic.ca"
+  }
+}

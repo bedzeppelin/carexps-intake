@@ -1,0 +1,7 @@
+node_modules/
+desk-service/config.json
+desk-service/certs/
+desk-service/spool/
+desk-service/logs/
+desk-service/dist/
+relay/local.settings.json

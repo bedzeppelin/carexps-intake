@@ -1,0 +1,14 @@
+{
+  "name": "CareXPS Patient Intake",
+  "short_name": "Intake",
+  "description": "Patient check-in form for CareXPS Urgent Care.",
+  "start_url": "./index.html?mode=kiosk",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F6F5F1",
+  "theme_color": "#3757D8",
+  "icons": [
+    { "src": "assets/carexps-logo.png", "sizes": "any", "type": "image/png", "purpose": "any" }
+  ]
+}

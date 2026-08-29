@@ -1,0 +1,121 @@
+{
+  "meta": {
+    "id": "a7f3c891-4d02-4b16-9e58-2c7d10ab55f9",
+    "formVersion": "1.0",
+    "clinic": "CareXPS Urgent Care",
+    "clinicAddress": "1030 Gordon St, Suite 102, Guelph, ON",
+    "pathway": "full",
+    "startedAt": "2026-08-29T14:31:08.412Z",
+    "submittedAt": "2026-08-29T14:42:19.907Z"
+  },
+  "checkin": {
+    "method": "manual",
+    "ohip": "4821567390AB"
+  },
+  "visit": {
+    "problem": "Severe right-sided abdominal pain since yesterday evening",
+    "onset": "Yesterday around 8pm",
+    "pain": 8,
+    "workInjury": "no",
+    "mva": "no",
+    "symptoms": [
+      "Fever",
+      "Nausea",
+      "Vomiting",
+      "Abdominal pain"
+    ],
+    "symptomOther": "",
+    "frequency": "Constant",
+    "trend": "Worsening"
+  },
+  "patient": {
+    "first": "Sarah",
+    "last": "Mitchell",
+    "address": "122 Silvercreek Pkwy N",
+    "city": "Guelph",
+    "province": "ON",
+    "postal": "N1H 7T9",
+    "homePhone": "519-822-4417",
+    "cellPhone": "519-546-2208",
+    "email": "sarah.mitchell@example.ca",
+    "dob": "1987-03-14",
+    "sex": "Female",
+    "marital": "Married"
+  },
+  "emergencyContacts": [
+    {
+      "name": "James Mitchell",
+      "phone": "519-546-9931"
+    },
+    {
+      "name": "Nora Ellis",
+      "phone": "226-780-4412"
+    }
+  ],
+  "allergies": {
+    "noKnownDrugAllergies": false,
+    "drugs": [
+      "Penicillin"
+    ],
+    "other": [
+      {
+        "allergen": "Shellfish",
+        "reaction": "Hives and facial swelling"
+      }
+    ]
+  },
+  "familyDoctorRequested": "yes",
+  "medicalHistory": {
+    "conditions": [
+      "Hypertension",
+      "GERD / acid reflux",
+      "Migraine"
+    ],
+    "hepatitisTypes": [],
+    "cancerType": ""
+  },
+  "surgeries": {
+    "items": [
+      "C-section",
+      "Wisdom teeth extraction"
+    ],
+    "other": ""
+  },
+  "medications": {
+    "prescription": [
+      {
+        "name": "Ramipril",
+        "dose": "5 mg",
+        "frequency": "Once daily"
+      },
+      {
+        "name": "Pantoprazole",
+        "dose": "40 mg",
+        "frequency": "Once daily"
+      }
+    ],
+    "nonPrescription": [
+      {
+        "name": "Vitamin D",
+        "dose": "1000 IU",
+        "frequency": "Once daily"
+      }
+    ]
+  },
+  "familyHistory": {
+    "conditions": [
+      "Heart disease",
+      "High blood pressure",
+      "Diabetes"
+    ],
+    "other": "",
+    "pregnant": "no",
+    "weeks": ""
+  },
+  "consent": {
+    "agreed": true,
+    "printedName": "Sarah Mitchell",
+    "signed": true,
+    "signedAt": "2026-08-29T14:42:11.220Z"
+  }
+}

@@ -1,0 +1,541 @@
+{
+  "resourceType": "Bundle",
+  "id": "a7f3c891-4d02-4b16-9e58-2c7d10ab55f9",
+  "type": "collection",
+  "timestamp": "2026-08-29T14:42:19.907Z",
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:36e7df02-a22b-49c6-95a8-d6b30363e242",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "36e7df02-a22b-49c6-95a8-d6b30363e242",
+        "name": [
+          {
+            "use": "official",
+            "family": "Mitchell",
+            "given": [
+              "Sarah"
+            ]
+          }
+        ],
+        "birthDate": "1987-03-14",
+        "gender": "female",
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "519-546-2208",
+            "use": "mobile"
+          },
+          {
+            "system": "phone",
+            "value": "519-822-4417",
+            "use": "home"
+          },
+          {
+            "system": "email",
+            "value": "sarah.mitchell@example.ca"
+          }
+        ],
+        "address": [
+          {
+            "line": [
+              "122 Silvercreek Pkwy N"
+            ],
+            "city": "Guelph",
+            "state": "ON",
+            "postalCode": "N1H 7T9",
+            "country": "CA"
+          }
+        ],
+        "maritalStatus": {
+          "text": "Married"
+        },
+        "identifier": [
+          {
+            "system": "https://fhir.infoway-inforoute.ca/NamingSystem/ca-on-patient-hcn",
+            "value": "4821567390AB"
+          }
+        ],
+        "contact": [
+          {
+            "relationship": [
+              {
+                "text": "Emergency contact"
+              }
+            ],
+            "name": {
+              "text": "James Mitchell"
+            },
+            "telecom": [
+              {
+                "system": "phone",
+                "value": "519-546-9931"
+              }
+            ]
+          },
+          {
+            "relationship": [
+              {
+                "text": "Emergency contact"
+              }
+            ],
+            "name": {
+              "text": "Nora Ellis"
+            },
+            "telecom": [
+              {
+                "system": "phone",
+                "value": "226-780-4412"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:44eacb96-4bde-470b-9c42-190440d89329",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "44eacb96-4bde-470b-9c42-190440d89329",
+        "status": "in-progress",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "EMER",
+          "display": "emergency"
+        },
+        "subject": {
+          "reference": "urn:uuid:36e7df02-a22b-49c6-95a8-d6b30363e242"
+        },
+        "period": {
+          "start": "2026-08-29T14:42:19.907Z"
+        },
+        "reasonCode": [
+          {
+            "text": "Severe right-sided abdominal pain since yesterday evening"
+          }
+        ],
+        "serviceProvider": {
+          "display": "CareXPS Urgent Care"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:1d547d59-b72a-4a01-b6dc-cfeb18e68820",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "1d547d59-b72a-4a01-b6dc-cfeb18e68820",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "72514-3",
+              "display": "Pain severity - 0-10 verbal numeric rating"
+            }
+          ]
+        },
+        "encounter": {
+          "reference": "urn:uuid:44eacb96-4bde-470b-9c42-190440d89329"
+        },
+        "subject": {
+          "reference": "urn:uuid:36e7df02-a22b-49c6-95a8-d6b30363e242"
+        },
+        "effectiveDateTime": "2026-08-29T14:42:19.907Z",
+        "valueQuantity": {
+          "value": 8,
+          "system": "http://unitsofmeasure.org",
+          "code": "{score}"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:68fde0e0-54d1-4fb3-80df-4add67dfde70",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "68fde0e0-54d1-4fb3-80df-4add67dfde70",
+        "clinicalStatus": {
+          "text": "active"
+        },
+        "verificationStatus": {
+          "text": "unconfirmed"
+        },
+        "category": [
+          {
+            "text": "Encounter Diagnosis"
+          }
+        ],
+        "code": {
+          "text": "Fever"
+        },
+        "encounter": {
+          "reference": "urn:uuid:44eacb96-4bde-470b-9c42-190440d89329"
+        },
+        "subject": {
+          "reference": "urn:uuid:36e7df02-a22b-49c6-95a8-d6b30363e242"
+        },
+        "recordedDate": "2026-08-29T14:42:19.907Z"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:aa281051-6820-421f-a3a5-8afa041943cd",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "aa281051-6820-421f-a3a5-8afa041943cd",
+        "clinicalStatus": {
+          "text": "active"
+        },
+        "verificationStatus": {
+          "text": "unconfirmed"
+        },
+        "category": [
+          {
+            "text": "Encounter Diagnosis"
+          }
+        ],
+        "code": {
+          "text": "Nausea"
+        },
+        "encounter": {
+          "reference": "urn:uuid:44eacb96-4bde-470b-9c42-190440d89329"
+        },
+        "subject": {
+          "reference": "urn:uuid:36e7df02-a22b-49c6-95a8-d6b30363e242"
+        },
+        "recordedDate": "2026-08-29T14:42:19.907Z"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:650661b3-4821-403e-a00a-11945f2cce16",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "650661b3-4821-403e-a00a-11945f2cce16",
+        "clinicalStatus": {
+          "text": "active"
+        },
+        "verificationStatus": {
+          "text": "unconfirmed"
+        },
+        "category": [
+          {
+            "text": "Encounter Diagnosis"
+          }
+        ],
+        "code": {
+          "text": "Vomiting"
+        },
+        "encounter": {
+          "reference": "urn:uuid:44eacb96-4bde-470b-9c42-190440d89329"
+        },
+        "subject": {
+          "reference": "urn:uuid:36e7df02-a22b-49c6-95a8-d6b30363e242"
+        },
+        "recordedDate": "2026-08-29T14:42:19.907Z"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:8467ada0-6c05-4b4b-85c8-7dea3224c15b",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "8467ada0-6c05-4b4b-85c8-7dea3224c15b",
+        "clinicalStatus": {
+          "text": "active"
+        },
+        "verificationStatus": {
+          "text": "unconfirmed"
+        },
+        "category": [
+          {
+            "text": "Encounter Diagnosis"
+          }
+        ],
+        "code": {
+          "text": "Abdominal pain"
+        },
+        "encounter": {
+          "reference": "urn:uuid:44eacb96-4bde-470b-9c42-190440d89329"
+        },
+        "subject": {
+          "reference": "urn:uuid:36e7df02-a22b-49c6-95a8-d6b30363e242"
+        },
+        "recordedDate": "2026-08-29T14:42:19.907Z"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:feaebf72-39e0-4eec-9c94-2a7a54093e34",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "feaebf72-39e0-4eec-9c94-2a7a54093e34",
+        "clinicalStatus": {
+          "text": "active"
+        },
+        "verificationStatus": {
+          "text": "unconfirmed"
+        },
+        "category": [
+          {
+            "text": "Problem List Item"
+          }
+        ],
+        "code": {
+          "text": "Hypertension"
+        },
+        "subject": {
+          "reference": "urn:uuid:36e7df02-a22b-49c6-95a8-d6b30363e242"
+        },
+        "recordedDate": "2026-08-29T14:42:19.907Z"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:a0a281bf-69e0-439c-986a-d5e83edbc0e2",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "a0a281bf-69e0-439c-986a-d5e83edbc0e2",
+        "clinicalStatus": {
+          "text": "active"
+        },
+        "verificationStatus": {
+          "text": "unconfirmed"
+        },
+        "category": [
+          {
+            "text": "Problem List Item"
+          }
+        ],
+        "code": {
+          "text": "GERD / acid reflux"
+        },
+        "subject": {
+          "reference": "urn:uuid:36e7df02-a22b-49c6-95a8-d6b30363e242"
+        },
+        "recordedDate": "2026-08-29T14:42:19.907Z"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:90cd7e1f-b697-442c-a0ae-769147f0f8ab",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "90cd7e1f-b697-442c-a0ae-769147f0f8ab",
+        "clinicalStatus": {
+          "text": "active"
+        },
+        "verificationStatus": {
+          "text": "unconfirmed"
+        },
+        "category": [
+          {
+            "text": "Problem List Item"
+          }
+        ],
+        "code": {
+          "text": "Migraine"
+        },
+        "subject": {
+          "reference": "urn:uuid:36e7df02-a22b-49c6-95a8-d6b30363e242"
+        },
+        "recordedDate": "2026-08-29T14:42:19.907Z"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:af2732f7-ea1e-40de-ab25-caf077bc2972",
+      "resource": {
+        "resourceType": "AllergyIntolerance",
+        "id": "af2732f7-ea1e-40de-ab25-caf077bc2972",
+        "clinicalStatus": {
+          "text": "active"
+        },
+        "verificationStatus": {
+          "text": "unconfirmed"
+        },
+        "category": [
+          "medication"
+        ],
+        "code": {
+          "text": "Penicillin"
+        },
+        "patient": {
+          "reference": "urn:uuid:36e7df02-a22b-49c6-95a8-d6b30363e242"
+        },
+        "recordedDate": "2026-08-29T14:42:19.907Z"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:036118d8-c041-4ea8-bc7c-ed3971b54294",
+      "resource": {
+        "resourceType": "AllergyIntolerance",
+        "id": "036118d8-c041-4ea8-bc7c-ed3971b54294",
+        "clinicalStatus": {
+          "text": "active"
+        },
+        "verificationStatus": {
+          "text": "unconfirmed"
+        },
+        "code": {
+          "text": "Shellfish"
+        },
+        "patient": {
+          "reference": "urn:uuid:36e7df02-a22b-49c6-95a8-d6b30363e242"
+        },
+        "recordedDate": "2026-08-29T14:42:19.907Z",
+        "reaction": [
+          {
+            "manifestation": [
+              {
+                "text": "Hives and facial swelling"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:d2993f4a-4af5-4ffa-9177-22a4fd63c946",
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "d2993f4a-4af5-4ffa-9177-22a4fd63c946",
+        "status": "completed",
+        "code": {
+          "text": "C-section"
+        },
+        "subject": {
+          "reference": "urn:uuid:36e7df02-a22b-49c6-95a8-d6b30363e242"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:f5b18f0e-67ad-4a89-b54c-8fef5023c482",
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "f5b18f0e-67ad-4a89-b54c-8fef5023c482",
+        "status": "completed",
+        "code": {
+          "text": "Wisdom teeth extraction"
+        },
+        "subject": {
+          "reference": "urn:uuid:36e7df02-a22b-49c6-95a8-d6b30363e242"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:2e7d4463-cece-475f-8ec6-5e9214c212ef",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "2e7d4463-cece-475f-8ec6-5e9214c212ef",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "text": "Ramipril"
+        },
+        "subject": {
+          "reference": "urn:uuid:36e7df02-a22b-49c6-95a8-d6b30363e242"
+        },
+        "dateAsserted": "2026-08-29T14:42:19.907Z",
+        "dosage": [
+          {
+            "text": "5 mg Once daily"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:8513a346-fff4-47b4-b2c1-23d079d5e31d",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "8513a346-fff4-47b4-b2c1-23d079d5e31d",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "text": "Pantoprazole"
+        },
+        "subject": {
+          "reference": "urn:uuid:36e7df02-a22b-49c6-95a8-d6b30363e242"
+        },
+        "dateAsserted": "2026-08-29T14:42:19.907Z",
+        "dosage": [
+          {
+            "text": "40 mg Once daily"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:f69ebec0-b32a-4477-817a-7e66ff8a0624",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "f69ebec0-b32a-4477-817a-7e66ff8a0624",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "text": "Vitamin D (non-prescription)"
+        },
+        "subject": {
+          "reference": "urn:uuid:36e7df02-a22b-49c6-95a8-d6b30363e242"
+        },
+        "dateAsserted": "2026-08-29T14:42:19.907Z",
+        "dosage": [
+          {
+            "text": "1000 IU Once daily"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:884f2525-ba32-4d78-a124-a092c00e0006",
+      "resource": {
+        "resourceType": "FamilyMemberHistory",
+        "id": "884f2525-ba32-4d78-a124-a092c00e0006",
+        "status": "completed",
+        "patient": {
+          "reference": "urn:uuid:36e7df02-a22b-49c6-95a8-d6b30363e242"
+        },
+        "date": "2026-08-29T14:42:19.907Z",
+        "relationship": {
+          "text": "Immediate family"
+        },
+        "condition": [
+          {
+            "code": {
+              "text": "Heart disease"
+            }
+          },
+          {
+            "code": {
+              "text": "High blood pressure"
+            }
+          },
+          {
+            "code": {
+              "text": "Diabetes"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:6d4abc3e-d608-4a0a-9363-4e89a9a44d9d",
+      "resource": {
+        "resourceType": "Consent",
+        "id": "6d4abc3e-d608-4a0a-9363-4e89a9a44d9d",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "treatment"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "IDSCL"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "urn:uuid:36e7df02-a22b-49c6-95a8-d6b30363e242"
+        },
+        "dateTime": "2026-08-29T14:42:11.220Z"
+      }
+    }
+  ]
+}

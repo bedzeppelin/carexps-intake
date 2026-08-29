@@ -1,0 +1,47 @@
+PATIENT INTAKE — 2026-08-29, 10:42:19 a.m.
+Patient: Sarah Mitchell
+DOB: 1987-03-14
+Sex: Female
+Phone: 519-546-2208
+Health number: 4821567390AB
+
+CHIEF COMPLAINT
+Severe right-sided abdominal pain since yesterday evening
+
+HISTORY OF PRESENT ILLNESS
+Onset: Yesterday around 8pm
+Pain: 8/10 (Severe pain)
+Frequency: Constant
+Trend: Worsening
+Work-related injury: No
+Motor vehicle accident: No
+Associated symptoms: Fever, Nausea, Vomiting, Abdominal pain
+
+ALLERGIES
+Drug allergies: Penicillin
+- Shellfish: Hives and facial swelling
+
+PAST MEDICAL HISTORY
+Conditions: Hypertension, GERD / acid reflux, Migraine
+
+PAST SURGICAL HISTORY
+C-section, Wisdom teeth extraction
+
+MEDICATIONS
+- Ramipril 5 mg Once daily
+- Pantoprazole 40 mg Once daily
+- Vitamin D 1000 IU Once daily (OTC)
+
+FAMILY HISTORY
+Heart disease, High blood pressure, Diabetes
+Pregnant: No
+
+ADMINISTRATIVE
+Requesting family doctor enrolment: Yes
+
+CONSENT
+Consent to treat: Given
+Signed by: Sarah Mitchell
+Signature captured: Yes
+
+Patient-entered intake. Verify before relying on it clinically.
