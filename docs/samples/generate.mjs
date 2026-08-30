@@ -2,6 +2,7 @@
 // sample files handed to Alembico cannot drift from the shipping code.
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { toCsv, csvHeader, csvRow } from '../../app/js/exporters/csv.js';
 import { toFhirBundle } from '../../app/js/exporters/fhir.js';
 import { toClinicalNote } from '../../app/js/exporters/note.js';
@@ -98,7 +99,11 @@ const quick = {
 };
 
 const all = [full, noFamilyDoctor, quick];
-const out = f => path.join(path.dirname(new URL(import.meta.url).pathname.slice(1)), f);
+// fileURLToPath, not pathname: a file:// pathname is "/C:/..." on Windows but
+// "/home/..." on Linux, so trimming the leading slash works on one and breaks
+// the other. Writes land beside this script whichever runs it.
+const here = path.dirname(fileURLToPath(import.meta.url));
+const out = f => path.join(here, f);
 const write = (f, text) => { fs.writeFileSync(out(f), text); console.log('  ' + f); };
 
 console.log('Writing docs/samples/');
