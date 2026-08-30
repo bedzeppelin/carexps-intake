@@ -1,4 +1,5 @@
 node_modules/
+_site/
 desk-service/config.json
 desk-service/certs/
 desk-service/spool/

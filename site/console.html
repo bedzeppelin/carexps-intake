@@ -1,0 +1,1904 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CareXPS Intake Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap">
+
+<style>
+/* ───────────────────────────────────────────────────────────────
+   Palette. Neutrals carry a green bias taken from the Ontario
+   health card; the accent is that card's green, deepened. Signal
+   colours (new / ok / warn / crit) are separate from the accent
+   and are used only to encode state.
+   ─────────────────────────────────────────────────────────────── */
+:root {
+  --paper:        #F4F7F5;
+  --surface:      #FFFFFF;
+  --surface-2:    #EBF0EC;
+  --surface-3:    #E1E8E3;
+  --ink:          #0D1B16;
+  --ink-2:        #3B4C46;
+  --ink-3:        #6C8078;
+  --line:         #D6E0DA;
+  --line-strong:  #B9C8C0;
+  --accent:       #0B6A4E;
+  --accent-ink:   #FFFFFF;
+  --accent-soft:  #E1F0E8;
+
+  --sig-new:      #1B5EA6;  --sig-new-bg:  #E3EDF8;
+  --sig-ok:       #0B6A4E;  --sig-ok-bg:   #E1F0E8;
+  --sig-warn:     #8A5600;  --sig-warn-bg: #FAEDD5;
+  --sig-crit:     #A11F16;  --sig-crit-bg: #FAE4E2;
+  --sig-idle:     #6C8078;  --sig-idle-bg: #E6ECE8;
+
+  /* The console masthead is a deliberate single-look band: it keeps
+     the same dark ground in both themes, so it carries its own set. */
+  --bar:          #0A1713;
+  --bar-2:        #13261F;
+  --bar-ink:      #EAF3EE;
+  --bar-ink-2:    #93A9A0;
+  --bar-line:     #22382F;
+
+  --radius:   10px;
+  --radius-s: 6px;
+
+  --font-display: "Bricolage Grotesque", "Instrument Sans", system-ui, sans-serif;
+  --font-body:    "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:       #0A1310;
+    --surface:     #11201B;
+    --surface-2:   #182C25;
+    --surface-3:   #1F372E;
+    --ink:         #E5EFE9;
+    --ink-2:       #A6BAB2;
+    --ink-3:       #788D85;
+    --line:        #23392F;
+    --line-strong: #345247;
+    --accent:      #35D398;
+    --accent-ink:  #052016;
+    --accent-soft: #103024;
+
+    --sig-new:     #7FB0EA;  --sig-new-bg:  #14263A;
+    --sig-ok:      #35D398;  --sig-ok-bg:   #0E3226;
+    --sig-warn:    #E4B15A;  --sig-warn-bg: #322510;
+    --sig-crit:    #EE8B81;  --sig-crit-bg: #391916;
+    --sig-idle:    #788D85;  --sig-idle-bg: #1B2C26;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper:       #0A1310;
+  --surface:     #11201B;
+  --surface-2:   #182C25;
+  --surface-3:   #1F372E;
+  --ink:         #E5EFE9;
+  --ink-2:       #A6BAB2;
+  --ink-3:       #788D85;
+  --line:        #23392F;
+  --line-strong: #345247;
+  --accent:      #35D398;
+  --accent-ink:  #052016;
+  --accent-soft: #103024;
+
+  --sig-new:     #7FB0EA;  --sig-new-bg:  #14263A;
+  --sig-ok:      #35D398;  --sig-ok-bg:   #0E3226;
+  --sig-warn:    #E4B15A;  --sig-warn-bg: #322510;
+  --sig-crit:    #EE8B81;  --sig-crit-bg: #391916;
+  --sig-idle:    #788D85;  --sig-idle-bg: #1B2C26;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.15; }
+
+a { color: var(--accent); }
+
+:where(button, a, input, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px; }
+.narrow { max-width: 780px; }
+
+/* ───────────────────────── masthead ───────────────────────── */
+
+.masthead { background: var(--bar); color: var(--bar-ink); border-bottom: 1px solid var(--bar-line); }
+
+.masthead-inner {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px;
+  padding-top: 18px; padding-bottom: 18px;
+}
+
+.brand { display: flex; align-items: baseline; gap: 10px; margin-right: auto; }
+
+.brand-mark {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--bar-ink); background: var(--bar-2);
+  border: 1px solid var(--bar-line); border-radius: 4px;
+  padding: 4px 7px; white-space: nowrap;
+}
+
+.brand-name { font-family: var(--font-display); font-weight: 600; font-size: 19px; letter-spacing: -0.015em; }
+.brand-sub  { color: var(--bar-ink-2); font-size: 13px; }
+
+.statuses { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.status {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.02em;
+  background: var(--bar-2); border: 1px solid var(--bar-line);
+  color: var(--bar-ink-2); border-radius: 999px; padding: 5px 11px;
+}
+.status b { color: var(--bar-ink); font-weight: 500; }
+.dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.dot-ok   { background: #35D398; box-shadow: 0 0 0 3px rgba(53,211,152,0.18); }
+.dot-off  { background: #E4B15A; box-shadow: 0 0 0 3px rgba(228,177,90,0.16); }
+
+/* ───────────────────────── page intro ───────────────────────── */
+
+.intro { padding-block: 46px 34px; }
+.eyebrow {
+  font-family: var(--font-mono); font-size: 11.5px; font-weight: 500;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent);
+  margin: 0 0 14px;
+}
+.intro h1 { font-size: clamp(30px, 5.2vw, 46px); font-weight: 600; letter-spacing: -0.028em; }
+.lede { font-size: clamp(16.5px, 2.1vw, 18.5px); color: var(--ink-2); max-width: 64ch; margin: 18px 0 0; }
+.lede strong { color: var(--ink); font-weight: 600; }
+
+.callout {
+  margin-top: 26px; padding: 16px 18px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-left: 3px solid var(--accent); border-radius: 0 var(--radius) var(--radius) 0;
+  max-width: 68ch;
+}
+.callout p { margin: 0; font-size: 15px; color: var(--ink-2); }
+.callout p + p { margin-top: 9px; }
+.callout strong { color: var(--ink); }
+
+/* ───────────────────────── console ───────────────────────── */
+
+.console {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); overflow: hidden; margin-bottom: 20px;
+}
+
+.console-bar {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 12px 16px; background: var(--surface-2); border-bottom: 1px solid var(--line);
+}
+
+.console-title {
+  font-family: var(--font-mono); font-size: 11.5px; font-weight: 500;
+  letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-3);
+  margin-right: auto;
+}
+
+.bell {
+  position: relative; display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--font-body); font-size: 13.5px; font-weight: 500;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line-strong); border-radius: 999px;
+  padding: 8px 14px; cursor: pointer; min-height: 40px;
+}
+.bell:hover { border-color: var(--accent); }
+.bell-count {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  background: var(--sig-new); color: var(--surface);
+  border-radius: 999px; padding: 1px 7px; min-width: 20px; text-align: center;
+}
+:root[data-theme="dark"] .bell-count,
+:root:not([data-theme="light"]) .bell-count { color: #0A1310; }
+
+.filters { display: flex; gap: 4px; overflow-x: auto; padding: 10px 12px; border-bottom: 1px solid var(--line); scrollbar-width: thin; }
+.filter {
+  font-family: var(--font-body); font-size: 13.5px; font-weight: 500;
+  background: none; border: 1px solid transparent; color: var(--ink-3);
+  padding: 8px 13px; border-radius: 999px; cursor: pointer; white-space: nowrap; min-height: 40px;
+}
+.filter:hover { color: var(--ink); background: var(--surface-2); }
+.filter[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+.console-body { display: grid; grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr); }
+.list-pane { border-right: 1px solid var(--line); min-width: 0; display: flex; flex-direction: column; }
+.detail-pane { min-width: 0; background: var(--surface); }
+
+/* Above the breakpoint both panes are on screen at once, so each scrolls
+   on its own rather than the short list stretching to the tall detail. */
+@media (min-width: 901px) {
+  .console-body { height: min(74vh, 720px); }
+  .list-pane, .detail-pane { overflow-y: auto; overscroll-behavior: contain; }
+  #list { flex: 1 1 auto; }
+  .list-foot { position: sticky; bottom: 0; background: var(--surface); }
+}
+
+/* list rows */
+.row {
+  display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; width: 100%; text-align: left;
+  padding: 14px 16px; background: none; border: none; border-bottom: 1px solid var(--line);
+  cursor: pointer; font-family: var(--font-body); color: var(--ink); position: relative;
+}
+.row::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: transparent; }
+.row:hover { background: var(--surface-2); }
+.row[aria-selected="true"] { background: var(--accent-soft); }
+.row[aria-selected="true"]::before { background: var(--accent); }
+.row-name { font-weight: 600; font-size: 15.5px; letter-spacing: -0.01em; }
+.row-meta { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.row-reason {
+  grid-column: 1 / -1; font-size: 13.5px; color: var(--ink-2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--font-mono); font-size: 10.5px; font-weight: 500;
+  letter-spacing: 0.07em; text-transform: uppercase;
+  border-radius: 4px; padding: 3px 7px; white-space: nowrap;
+}
+.chip-new  { background: var(--sig-new-bg);  color: var(--sig-new); }
+.chip-sent { background: var(--sig-ok-bg);   color: var(--sig-ok); }
+.chip-queued { background: var(--sig-warn-bg); color: var(--sig-warn); }
+.chip-idle { background: var(--sig-idle-bg); color: var(--sig-idle); }
+
+/* detail */
+.detail-head { padding: 18px 20px 14px; border-bottom: 1px solid var(--line); }
+.detail-back {
+  display: none; align-items: center; gap: 6px; margin-bottom: 12px;
+  font-family: var(--font-body); font-size: 14px; font-weight: 500;
+  background: var(--surface-2); border: 1px solid var(--line); color: var(--ink);
+  border-radius: var(--radius-s); padding: 8px 12px; cursor: pointer; min-height: 40px;
+}
+.detail-head h3 { font-size: 21px; font-weight: 600; letter-spacing: -0.02em; }
+.detail-facts {
+  display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px;
+  font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums;
+}
+.detail-facts span b { color: var(--ink-2); font-weight: 500; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
+
+.btn {
+  font-family: var(--font-body); font-size: 13.5px; font-weight: 500;
+  border-radius: var(--radius-s); padding: 9px 14px; cursor: pointer;
+  border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+  min-height: 40px; display: inline-flex; align-items: center; gap: 7px;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn-primary:hover { color: var(--accent-ink); filter: brightness(1.08); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.tabs { display: flex; gap: 2px; padding: 0 12px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: thin; }
+.tab {
+  font-family: var(--font-mono); font-size: 11.5px; font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  background: none; border: none; border-bottom: 2px solid transparent;
+  color: var(--ink-3); padding: 12px 12px; cursor: pointer; white-space: nowrap; min-height: 42px;
+}
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+
+.pane { padding: 18px 20px 24px; }
+.pane[hidden] { display: none; }
+
+.sec-title {
+  font-family: var(--font-mono); font-size: 10.5px; font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3);
+  margin: 22px 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--line);
+}
+.sec-title:first-child { margin-top: 0; }
+
+.kv { display: grid; grid-template-columns: minmax(120px, 34%) 1fr; gap: 3px 16px; font-size: 14.5px; }
+.kv dt { color: var(--ink-3); }
+.kv dd { margin: 0; color: var(--ink); overflow-wrap: anywhere; }
+
+pre.code {
+  font-family: var(--font-mono); font-size: 12.5px; line-height: 1.62;
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius-s);
+  padding: 14px; margin: 0; overflow-x: auto; white-space: pre; color: var(--ink-2);
+  max-height: 460px; overflow-y: auto;
+}
+pre.code.wrap-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.hint { font-size: 13.5px; color: var(--ink-3); margin: 0 0 12px; }
+
+/* ───────────────────────── document sections ───────────────────────── */
+
+section.doc { padding: 52px 0 10px; }
+.doc-head { max-width: 68ch; margin-bottom: 26px; }
+.doc-head h2 { font-size: clamp(23px, 3.4vw, 30px); font-weight: 600; letter-spacing: -0.022em; }
+.doc-head p { color: var(--ink-2); font-size: 16px; margin: 12px 0 0; max-width: 66ch; }
+
+.rule { height: 1px; background: var(--line); border: 0; margin: 0; }
+
+/* pipeline — a real ordered sequence, so the numbers carry information */
+.pipeline { display: grid; gap: 12px; counter-reset: stage; }
+.stage {
+  display: grid; grid-template-columns: auto 1fr; gap: 4px 16px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px;
+}
+.stage::before {
+  counter-increment: stage; content: counter(stage, decimal-leading-zero);
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--accent);
+  grid-row: 1 / span 2; padding-top: 3px; font-variant-numeric: tabular-nums;
+}
+.stage h4 { font-size: 16.5px; font-weight: 600; letter-spacing: -0.012em; }
+.stage p { margin: 5px 0 0; font-size: 14.5px; color: var(--ink-2); }
+.stage code { font-family: var(--font-mono); font-size: 0.88em; background: var(--surface-2); padding: 1px 5px; border-radius: 3px; }
+.stage[data-open="true"] { border-color: var(--sig-warn); border-style: dashed; background: var(--sig-warn-bg); }
+.stage[data-open="true"]::before { color: var(--sig-warn); }
+.stage[data-open="true"] p { color: var(--ink-2); }
+
+/* questions */
+.questions { display: grid; gap: 14px; }
+.q { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; }
+.q-tag {
+  font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 8px;
+}
+.q h4 { font-size: 17px; font-weight: 600; letter-spacing: -0.014em; }
+.q p { margin: 9px 0 0; font-size: 14.5px; color: var(--ink-2); }
+.q p:last-child { margin-bottom: 0; }
+.q ul { margin: 9px 0 0; padding-left: 20px; font-size: 14.5px; color: var(--ink-2); }
+.q li + li { margin-top: 4px; }
+.q code, .doc-head code, .callout code { font-family: var(--font-mono); font-size: 0.88em; background: var(--surface-2); padding: 1px 5px; border-radius: 3px; color: var(--ink); }
+
+/* tables */
+.table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 620px; font-size: 14px; }
+thead th {
+  text-align: left; font-family: var(--font-mono); font-size: 10.5px; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3);
+  padding: 11px 14px; background: var(--surface-2); border-bottom: 1px solid var(--line); white-space: nowrap;
+}
+tbody td { padding: 10px 14px; border-bottom: 1px solid var(--line); color: var(--ink-2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+td.mono, th.mono { font-family: var(--font-mono); font-size: 12.5px; color: var(--ink); }
+td.req { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+.yes { color: var(--sig-ok); }
+.no  { color: var(--ink-3); }
+
+/* modal */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(6, 16, 13, 0.55); backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 60;
+}
+.modal-backdrop[hidden] { display: none; }
+.modal {
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius);
+  max-width: 720px; width: 100%; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden;
+}
+.modal-head { padding: 18px 20px 14px; border-bottom: 1px solid var(--line); display: flex; align-items: flex-start; gap: 12px; }
+.modal-head h3 { font-size: 19px; font-weight: 600; letter-spacing: -0.018em; margin-right: auto; }
+.modal-body { padding: 18px 20px; overflow-y: auto; }
+.modal-foot { padding: 14px 20px; border-top: 1px solid var(--line); background: var(--surface-2); display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.x { background: none; border: none; color: var(--ink-3); font-size: 22px; line-height: 1; cursor: pointer; padding: 2px 6px; }
+.x:hover { color: var(--ink); }
+
+.warnbox {
+  background: var(--sig-warn-bg); border: 1px solid var(--sig-warn); border-radius: var(--radius-s);
+  padding: 12px 14px; font-size: 14px; color: var(--ink-2); margin-bottom: 16px;
+}
+.warnbox strong { color: var(--ink); }
+
+/* toast */
+.toasts { position: fixed; left: 16px; right: 16px; bottom: 16px; display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 80; pointer-events: none; }
+.toast {
+  background: var(--bar); color: var(--bar-ink); border: 1px solid var(--bar-line);
+  border-radius: var(--radius-s); padding: 11px 16px; font-size: 14px; max-width: 460px;
+  box-shadow: 0 8px 24px rgba(6, 16, 13, 0.28); animation: rise 0.22s ease-out;
+}
+.toast b { color: #35D398; font-weight: 600; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* footer */
+footer.foot { margin-top: 56px; border-top: 1px solid var(--line); padding: 26px 0 46px; }
+footer.foot p { font-size: 13.5px; color: var(--ink-3); margin: 0; max-width: 70ch; }
+footer.foot p + p { margin-top: 8px; }
+
+.synthetic {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  background: var(--sig-warn-bg); color: var(--sig-warn); border-radius: 4px; padding: 4px 9px;
+}
+
+/* ───────────────────────── responsive ───────────────────────── */
+
+@media (max-width: 900px) {
+  .console-body { grid-template-columns: 1fr; }
+  .list-pane { border-right: none; }
+  .detail-pane { display: none; }
+  .console[data-view="detail"] .list-pane { display: none; }
+  .console[data-view="detail"] .detail-pane { display: block; }
+  .console[data-view="detail"] .filters { display: none; }
+  .detail-back { display: inline-flex; }
+}
+
+@media (max-width: 620px) {
+  body { font-size: 15.5px; }
+  .wrap { padding: 0 15px; }
+  .intro { padding-block: 34px 26px; }
+  .masthead-inner { padding-top: 14px; padding-bottom: 14px; }
+  .brand { width: 100%; }
+  .brand-sub { display: none; }
+  .kv { grid-template-columns: 1fr; gap: 0 0; }
+  .kv dt { margin-top: 9px; font-size: 12.5px; }
+  .kv dd { margin-bottom: 2px; }
+  .stage { grid-template-columns: 1fr; gap: 6px; }
+  .stage::before { grid-row: auto; padding-top: 0; }
+  .actions .btn { flex: 1 1 auto; justify-content: center; }
+  .filter, .bell { min-height: 44px; }
+  .tab { min-height: 46px; }
+  pre.code { font-size: 11.5px; }
+  .modal { max-height: 92vh; }
+}
+</style>
+
+</head>
+<body>
+<header class="masthead">
+  <div class="wrap masthead-inner">
+    <div class="brand">
+      <span class="brand-mark">CareXPS</span>
+      <span>
+        <span class="brand-name">Intake Console</span>
+        <span class="brand-sub">— CareXPS Urgent Care, Guelph ON</span>
+      </span>
+    </div>
+    <div class="statuses">
+      <span class="status"><span class="dot dot-ok"></span>Desk service <b>online</b></span>
+      <span class="status"><span class="dot dot-ok"></span>OneDrive <b>writable</b></span>
+      <span class="status"><span class="dot dot-off"></span>Alembico <b>not connected</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap intro">
+  <p class="eyebrow">Integration prototype for the Alembico team</p>
+  <h1>Everything reaches the front desk. Nothing reaches the chart yet.</h1>
+  <p class="lede">
+    CareXPS Urgent Care replaced its paper intake form with a tablet flow. A completed form is
+    rendered to PDF and filed into the clinic's OneDrive within a couple of seconds, and staff get a
+    clinical note they can paste into Alembico by hand. <strong>The paste is the part we want to
+    remove.</strong> This page is the working console that would do it, plus the exact data we would
+    send you.
+  </p>
+  <div class="callout">
+    <p>
+      <strong>What we need from you:</strong> confirmation of whether Alembico exposes an interface we can
+      post to, and if so, what it expects. Everything else is built. Section
+      <a href="#ask">“What we need from Alembico”</a> is the short version — four questions.
+    </p>
+    <p>
+      Every submission below is <span class="synthetic">synthetic test data</span> — invented names,
+      invented health numbers. No real patient information appears anywhere on this page.
+    </p>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="console" id="console" data-view="list">
+    <div class="console-bar">
+      <span class="console-title">Submissions — today</span>
+      <button class="bell" id="bell" type="button">
+        <svg width="15" height="15" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <path d="M10 2.5a5 5 0 0 0-5 5v3l-1.5 2.5h13L15 10.5v-3a5 5 0 0 0-5-5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M8 15.5a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        Notifications
+        <span class="bell-count" id="bellCount">1</span>
+      </button>
+    </div>
+
+    <div class="filters" id="filters" role="group" aria-label="Filter submissions">
+      <button class="filter" type="button" data-filter="all" aria-pressed="true">All</button>
+      <button class="filter" type="button" data-filter="new" aria-pressed="false">Needs action</button>
+      <button class="filter" type="button" data-filter="sent" aria-pressed="false">Sent to Alembico</button>
+      <button class="filter" type="button" data-filter="queued" aria-pressed="false">Queued for retry</button>
+    </div>
+
+    <div class="console-body">
+      <div class="list-pane">
+        <div id="list" role="listbox" aria-label="Intake submissions"></div>
+        <div class="list-foot" style="padding: 14px 16px; border-top: 1px solid var(--line); display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn" type="button" id="exportAllCsv">Export all as CSV</button>
+          <button class="btn" type="button" id="exportAllJson">Export all as JSON</button>
+        </div>
+      </div>
+
+      <div class="detail-pane" id="detail"></div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <section class="doc" id="pipeline">
+    <div class="doc-head">
+      <h2>How a submission travels</h2>
+      <p>
+        Five stages, in this order, deliberately. The tablet clears a patient's answers on a
+        <code>200</code> and on nothing else, and the desk service returns <code>200</code> only once the
+        PDF is confirmed on disk. Stage 05 is the one that does not exist yet.
+      </p>
+    </div>
+    <div class="pipeline">
+      <div class="stage">
+        <h4>Patient submits on a tablet</h4>
+        <p>Kiosk tablet on the clinic wifi <code>POST</code>s the submission JSON to the clinic PC over HTTPS. The tablet holds no credentials for OneDrive or Alembico and stores nothing between patients.</p>
+      </div>
+      <div class="stage">
+        <h4>Desk service spools it</h4>
+        <p>The raw submission is written to a local spool and <code>fsync</code>ed before any work starts. If the PC loses power mid-render, the form survives and replays on next start.</p>
+      </div>
+      <div class="stage">
+        <h4>PDF is rendered and filed</h4>
+        <p>Written atomically into the clinic's synced OneDrive folder as <code>Intake_Last_First_2026-08-29_1042_a7f3c891.pdf</code>. OneDrive handles the rest.</p>
+      </div>
+      <div class="stage">
+        <h4>Front desk is notified</h4>
+        <p>The submission appears in the console above with a <span class="chip chip-new">New</span> chip. Staff currently open the note, select it, and paste it into the patient's Alembico encounter by hand.</p>
+      </div>
+      <div class="stage" data-open="true">
+        <h4>Push to Alembico — not built</h4>
+        <p>The clinic PC posts the encounter to Alembico, which files it against the patient matched on their Ontario health number. <code>desk-service/src/alembico.js</code> ships as a documented, disabled stub. It is the only file that changes once you answer.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="doc" id="ask">
+    <div class="doc-head">
+      <h2>What we need from Alembico</h2>
+      <p>
+        Public directory listings say Alembico has no API. Alembico's own marketing describes
+        interface-level integrations. Those disagree, so nothing has been guessed at in code — we would
+        rather ship a disabled stub than a wrong assumption. Four questions unblock it.
+      </p>
+    </div>
+    <div class="questions">
+      <div class="q">
+        <span class="q-tag">Question 01 — the blocking one</span>
+        <h4>Is there an interface we can post to at all?</h4>
+        <p>
+          Any of these would work for us, in descending order of preference. We are not asking you to
+          build anything new — we are asking which of these already exists:
+        </p>
+        <ul>
+          <li>An HTTP API accepting an encounter or document for a patient</li>
+          <li>An HL7 v2 feed (<code>MDM^T02</code> or <code>ADT^A04</code>) over MLLP or a file drop</li>
+          <li>A FHIR R4 endpoint — we already produce a conformant bundle, shown in the console above</li>
+          <li>A watched folder Alembico ingests from, with a filename or sidecar convention</li>
+          <li>Nothing — in which case staff keep pasting, and we would like that confirmed in writing so we stop asking</li>
+        </ul>
+      </div>
+      <div class="q">
+        <span class="q-tag">Question 02 — patient matching</span>
+        <h4>How does Alembico identify which chart this belongs to?</h4>
+        <p>
+          Every submission carries an Ontario health number, normalised to ten digits plus an optional
+          two-letter version code, separators stripped, upper-cased — <code>4821567390AB</code>. Does
+          Alembico accept that as a lookup key, or does it need your own internal patient ID? And what
+          should happen when the number matches nobody: create the chart, or hold the encounter for
+          staff to reconcile?
+        </p>
+        <p>
+          Roughly one submission in eight is a first-time patient with no chart yet, so the "no match"
+          path is not an edge case for us.
+        </p>
+      </div>
+      <div class="q">
+        <span class="q-tag">Question 03 — payload shape</span>
+        <h4>What does the encounter body look like?</h4>
+        <p>
+          We can send any of four representations of the same submission, all generated from one
+          canonical object so they cannot drift apart: a plain-text clinical note, a flat CSV row, the
+          full JSON, or a FHIR R4 bundle. All four are in the console above — open a submission and
+          switch tabs. Tell us which you want and we will send that one.
+        </p>
+        <p>
+          Also: can we attach the signed PDF to the encounter, or does the note have to carry
+          everything?
+        </p>
+      </div>
+      <div class="q">
+        <span class="q-tag">Question 04 — credentials and environment</span>
+        <h4>How do we authenticate, and is there a test environment?</h4>
+        <p>
+          Bearer token, mutual TLS, IP allowlist, something else? The credential will live on the clinic
+          PC only — never on a tablet, which is a screen in a public room. We would also like a
+          non-production target to send test submissions to before anything touches a real chart.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="doc" id="matching">
+    <div class="doc-head">
+      <h2>Matching on the health number</h2>
+      <p>
+        The suggestion was to key on the health card number, possibly through the filename. That works,
+        with one caveat worth raising before it gets built.
+      </p>
+    </div>
+    <div class="callout" style="max-width: 72ch; margin-top: 0;">
+      <p>
+        <strong>A health number in a filename is health information in a place that is not protected like
+        health information.</strong> Filenames travel further than file contents: they appear in OneDrive
+        sync logs, backup indexes, folder listings, and any support ticket where someone pastes a
+        directory. The current build deliberately keeps identifiers out of filenames and logs for exactly
+        this reason.
+      </p>
+      <p>
+        So the preference is to match on a <strong>field in the payload</strong> rather than the filename.
+        If a watched folder is the only integration Alembico offers, a sidecar
+        <code>.json</code> next to each PDF carries the number without putting it in the name. If the
+        filename genuinely has to carry it, we will build that — it is the clinic's call, not ours — but
+        it should be a decision someone made rather than one that happened.
+      </p>
+    </div>
+
+    <div style="margin-top: 22px;">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>Option</th><th>Where the number lives</th><th>Works if Alembico offers</th><th>PHI exposure</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Field in the request body</strong><br><span style="font-size:13px;color:var(--ink-3)">Preferred</span></td>
+              <td class="mono">patientIdentifier.value</td>
+              <td>An HTTP API, FHIR, or HL7</td>
+              <td class="yes">Payload only — encrypted in transit, not logged</td>
+            </tr>
+            <tr>
+              <td><strong>Sidecar JSON beside the PDF</strong></td>
+              <td class="mono">manifest.json → ohip</td>
+              <td>A watched folder</td>
+              <td class="yes">File contents only — filename stays clean</td>
+            </tr>
+            <tr>
+              <td><strong>Encoded in the filename</strong></td>
+              <td class="mono">4821567390AB_2026-08-29.pdf</td>
+              <td>A watched folder with no sidecar support</td>
+              <td class="no">Visible in sync logs, backups, folder listings</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="doc" id="contract">
+    <div class="doc-head">
+      <h2>The data contract</h2>
+      <p>
+        One canonical submission object. The PDF, the note, the CSV and the FHIR bundle are all derived
+        from it, so they can never disagree. Two pathways produce two shapes, and the difference matters
+        for anything consuming this.
+      </p>
+    </div>
+
+    <h3 style="font-size:18px;font-weight:600;letter-spacing:-0.015em;margin-bottom:10px;">Top-level structure</h3>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Key</th><th>Type</th><th class="mono">quick</th><th class="mono">full</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">meta</td><td>object</td><td class="req yes">always</td><td class="req yes">always</td><td>Reference id, form version, clinic, pathway, timestamps</td></tr>
+          <tr><td class="mono">checkin</td><td>object</td><td class="req yes">always</td><td class="req yes">always</td><td><code>method</code> is <code>scan</code>, <code>manual</code> or <code>none</code>; <code>ohip</code> normalised</td></tr>
+          <tr><td class="mono">visit</td><td>object</td><td class="req yes">reduced</td><td class="req yes">always</td><td>Quick check-in carries reason and pain only</td></tr>
+          <tr><td class="mono">patient</td><td>object</td><td class="req no">absent</td><td class="req yes">always</td><td>Name, DOB, sex, marital status, address, phones, email</td></tr>
+          <tr><td class="mono">emergencyContacts</td><td>array</td><td class="req no">absent</td><td class="req yes">always</td><td>Empty rows are dropped before sending</td></tr>
+          <tr><td class="mono">allergies</td><td>object</td><td class="req no">absent</td><td class="req yes">always</td><td><code>noKnownDrugAllergies</code> is an explicit answer, not an empty list</td></tr>
+          <tr><td class="mono">familyDoctorRequested</td><td>"yes" | "no"</td><td class="req no">absent</td><td class="req yes">always</td><td>Gates the four extended sections below</td></tr>
+          <tr><td class="mono">medicalHistory</td><td>object</td><td class="req no">absent</td><td class="req">conditional</td><td>Only when <code>familyDoctorRequested === "yes"</code></td></tr>
+          <tr><td class="mono">surgeries</td><td>object</td><td class="req no">absent</td><td class="req">conditional</td><td>Checklist plus free text</td></tr>
+          <tr><td class="mono">medications</td><td>object</td><td class="req no">absent</td><td class="req">conditional</td><td>Prescription and non-prescription, each name / dose / frequency</td></tr>
+          <tr><td class="mono">familyHistory</td><td>object</td><td class="req no">absent</td><td class="req">conditional</td><td>Includes pregnancy status and gestational weeks</td></tr>
+          <tr><td class="mono">consent</td><td>object</td><td class="req no">absent</td><td class="req yes">always</td><td>Agreement, printed name, and a signature PNG as a data URI</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:18px;font-weight:600;letter-spacing:-0.015em;margin:30px 0 10px;">Fields that need care</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Field</th><th>Format</th><th>Why it is like this</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="mono">checkin.ohip</td>
+            <td class="mono">^\d{10}[A-Z]{0,2}$</td>
+            <td>Separators stripped and upper-cased on export, so <code>1234-567-890-ab</code> and <code>1234 567 890 AB</code> do not look like two patients. The two-letter version code is missing from some older cards, so it is optional — the ten digits are not.</td>
+          </tr>
+          <tr>
+            <td class="mono">meta.id</td>
+            <td class="mono">^[\w-]{8,64}$</td>
+            <td>A UUID generated on the tablet. Idempotency key — a retried submission carries the same id, so it must not create two encounters.</td>
+          </tr>
+          <tr>
+            <td class="mono">patient.dob</td>
+            <td class="mono">YYYY-MM-DD</td>
+            <td>ISO date, no time component.</td>
+          </tr>
+          <tr>
+            <td class="mono">meta.submittedAt</td>
+            <td class="mono">ISO 8601 UTC</td>
+            <td>When the patient pressed submit, not when it reached you.</td>
+          </tr>
+          <tr>
+            <td class="mono">visit.pain</td>
+            <td class="mono">integer 0–10</td>
+            <td>Exported to FHIR as LOINC <code>72514-3</code>.</td>
+          </tr>
+          <tr>
+            <td class="mono">consent.signaturePng</td>
+            <td class="mono">data:image/png;base64</td>
+            <td>Around 20–30 KB. Omitted from the CSV and from the sample JSON in the console, for length.</td>
+          </tr>
+          <tr>
+            <td class="mono">*.symptoms, *.conditions</td>
+            <td class="mono">string[]</td>
+            <td>Patient-facing wording, not coded terminology. If you want SNOMED or ICD, tell us the code system and the mapping goes in one file.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="doc" id="notes">
+    <div class="doc-head">
+      <h2>Things worth knowing before you read the data</h2>
+    </div>
+    <div class="questions">
+      <div class="q">
+        <h4>The health card photo is never kept</h4>
+        <p>
+          A patient can photograph the front of their card, but the image is discarded immediately and
+          the number is typed by hand. An OCR guess written into a chart as a health number is worse than
+          no number at all — it silently points at somebody else.
+        </p>
+      </div>
+      <div class="q">
+        <h4>This is patient-entered and unverified</h4>
+        <p>
+          Nobody at the clinic has checked any of it when it reaches you. Every export carries that
+          statement in its footer. If Alembico distinguishes verified from self-reported data, the whole
+          submission belongs in the self-reported category.
+        </p>
+      </div>
+      <div class="q">
+        <h4>Delivery is at-least-once, so treat <code>meta.id</code> as an idempotency key</h4>
+        <p>
+          If the PDF files successfully but the push to Alembico fails, the submission sits in the queue
+          and retries. The same <code>meta.id</code> arriving twice must not produce two encounters.
+        </p>
+      </div>
+      <div class="q">
+        <h4>Nothing here is stored longer than it needs to be</h4>
+        <p>
+          The tablet keeps no <code>localStorage</code>, <code>sessionStorage</code>, <code>IndexedDB</code>
+          or cookies — state lives in memory for one session and the page hard-reloads afterwards. Logs
+          record a reference and an outcome, never field values. The clinic's OneDrive folder is the
+          system of record until Alembico becomes one.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>
+      <strong>CareXPS Intake Console</strong> — integration prototype prepared for the Alembico team,
+      29 August 2026.
+    </p>
+    <p>
+      Every submission, name, health number, address and phone number on this page is synthetic test
+      data created for this document. No real patient information is present. The console simulates the
+      desk service locally in your browser; nothing you do here reaches a clinic system, and the
+      "Send to Alembico" action shows the request we propose rather than making one.
+    </p>
+  </footer>
+</div>
+
+<div class="modal-backdrop" id="modal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-head">
+      <h3 id="modalTitle">Send to Alembico</h3>
+      <button class="x" type="button" id="modalClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot"></div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+"use strict";
+
+/* ════════════════════════════════════════════════════════════════
+   Synthetic submissions. Same shape the tablet app produces —
+   see app/js/exporters/submission.js in the repository.
+   Invented people, invented health numbers.
+   ════════════════════════════════════════════════════════════════ */
+
+const CLINIC = "CareXPS Urgent Care";
+const ADDRESS = "1030 Gordon St, Suite 102, Guelph, ON";
+
+const SUBMISSIONS = [
+  {
+    _state: "new",
+    _receivedAgo: "4 min ago",
+    meta: {
+      id: "a7f3c891-4d02-4b16-9e58-2c7d10ab55f9",
+      formVersion: "1.0", clinic: CLINIC, clinicAddress: ADDRESS, pathway: "full",
+      startedAt: "2026-08-29T14:31:08.412Z", submittedAt: "2026-08-29T14:42:19.907Z"
+    },
+    checkin: { method: "manual", ohip: "4821567390AB" },
+    visit: {
+      problem: "Severe right-sided abdominal pain since yesterday evening",
+      onset: "Yesterday around 8pm", pain: 8, workInjury: "no", mva: "no",
+      symptoms: ["Fever", "Nausea", "Vomiting", "Abdominal pain"],
+      symptomOther: "", frequency: "Constant", trend: "Worsening"
+    },
+    patient: {
+      first: "Sarah", last: "Mitchell", address: "122 Silvercreek Pkwy N", city: "Guelph",
+      province: "ON", postal: "N1H 7T9", homePhone: "519-822-4417", cellPhone: "519-546-2208",
+      email: "sarah.mitchell@example.ca", dob: "1987-03-14", sex: "Female", marital: "Married"
+    },
+    emergencyContacts: [
+      { name: "James Mitchell", phone: "519-546-9931" },
+      { name: "Nora Ellis", phone: "226-780-4412" }
+    ],
+    allergies: {
+      noKnownDrugAllergies: false, drugs: ["Penicillin"],
+      other: [{ allergen: "Shellfish", reaction: "Hives and facial swelling" }]
+    },
+    familyDoctorRequested: "yes",
+    medicalHistory: {
+      conditions: ["Hypertension", "GERD / acid reflux", "Migraine"],
+      hepatitisTypes: [], cancerType: ""
+    },
+    surgeries: { items: ["C-section", "Wisdom teeth extraction"], other: "" },
+    medications: {
+      prescription: [
+        { name: "Ramipril", dose: "5 mg", frequency: "Once daily" },
+        { name: "Pantoprazole", dose: "40 mg", frequency: "Once daily" }
+      ],
+      nonPrescription: [{ name: "Vitamin D", dose: "1000 IU", frequency: "Once daily" }]
+    },
+    familyHistory: {
+      conditions: ["Heart disease", "High blood pressure", "Diabetes"],
+      other: "", pregnant: "no", weeks: ""
+    },
+    consent: {
+      agreed: true, printedName: "Sarah Mitchell", signed: true,
+      signedAt: "2026-08-29T14:42:11.220Z"
+    }
+  },
+  {
+    _state: "queued",
+    _receivedAgo: "22 min ago",
+    _error: "Alembico endpoint not configured — held in spool, will replay on next service start.",
+    meta: {
+      id: "b214e7d0-9a3c-4f81-8b25-6ee04c1f7a33",
+      formVersion: "1.0", clinic: CLINIC, clinicAddress: ADDRESS, pathway: "full",
+      startedAt: "2026-08-29T14:09:44.001Z", submittedAt: "2026-08-29T14:24:37.556Z"
+    },
+    checkin: { method: "scan", ohip: "2604915738" },
+    visit: {
+      problem: "Chest tightness and shortness of breath when walking uphill",
+      onset: "About two weeks ago", pain: 3, workInjury: "no", mva: "no",
+      symptoms: ["Chills", "Fatigue", "Shortness of breath"],
+      symptomOther: "", frequency: "Intermittent", trend: "Worsening"
+    },
+    patient: {
+      first: "Marcus", last: "Bell", address: "415 Willow Rd", city: "Guelph",
+      province: "ON", postal: "N1H 1S8", homePhone: "519-763-8840", cellPhone: "",
+      email: "", dob: "1961-06-27", sex: "Male", marital: "Widowed"
+    },
+    emergencyContacts: [{ name: "Diane Bell", phone: "519-763-1129" }],
+    allergies: { noKnownDrugAllergies: false, drugs: ["Sulfa drugs"], other: [] },
+    familyDoctorRequested: "yes",
+    medicalHistory: {
+      conditions: ["Hypertension", "Diabetes (Type 2)", "High cholesterol"],
+      hepatitisTypes: [], cancerType: ""
+    },
+    surgeries: { items: ["Angioplasty / stent"], other: "Left knee arthroscopy, 2019" },
+    medications: {
+      prescription: [
+        { name: "Metformin", dose: "1000 mg", frequency: "Twice daily" },
+        { name: "Atorvastatin", dose: "40 mg", frequency: "At bedtime" },
+        { name: "Perindopril", dose: "4 mg", frequency: "Once daily" }
+      ],
+      nonPrescription: [{ name: "ASA", dose: "81 mg", frequency: "Once daily" }]
+    },
+    familyHistory: {
+      conditions: ["Heart disease", "Stroke", "Diabetes"],
+      other: "", pregnant: "na", weeks: ""
+    },
+    consent: {
+      agreed: true, printedName: "Marcus Bell", signed: true,
+      signedAt: "2026-08-29T14:24:29.108Z"
+    }
+  },
+  {
+    _state: "sent",
+    _receivedAgo: "1 hr ago",
+    _sentAt: "2026-08-29T13:41:02.400Z",
+    meta: {
+      id: "c93a0f56-71be-4c28-a4d7-08bb2e6d4415",
+      formVersion: "1.0", clinic: CLINIC, clinicAddress: ADDRESS, pathway: "full",
+      startedAt: "2026-08-29T13:28:55.700Z", submittedAt: "2026-08-29T13:39:48.213Z"
+    },
+    checkin: { method: "manual", ohip: "3178462095CD" },
+    visit: {
+      problem: "Twisted left ankle playing soccer on Saturday",
+      onset: "Saturday afternoon", pain: 6, workInjury: "no", mva: "no",
+      symptoms: ["Joint pain", "Swelling"],
+      symptomOther: "", frequency: "Intermittent", trend: "Improving"
+    },
+    patient: {
+      first: "Priya", last: "Raghavan", address: "88 Wellington St E", city: "Guelph",
+      province: "ON", postal: "N1H 3T9", homePhone: "", cellPhone: "647-330-1182",
+      email: "priya.raghavan@example.ca", dob: "1994-11-02", sex: "Female", marital: "Single"
+    },
+    emergencyContacts: [{ name: "Anil Raghavan", phone: "647-330-2274" }],
+    allergies: { noKnownDrugAllergies: true, drugs: [], other: [] },
+    familyDoctorRequested: "no",
+    consent: {
+      agreed: true, printedName: "Priya Raghavan", signed: true,
+      signedAt: "2026-08-29T13:39:40.882Z"
+    }
+  },
+  {
+    _state: "sent",
+    _receivedAgo: "2 hr ago",
+    _sentAt: "2026-08-29T12:52:10.000Z",
+    meta: {
+      id: "d5b8c2a4-30f7-4e93-b1c6-9a7f45d0e812",
+      formVersion: "1.0", clinic: CLINIC, clinicAddress: ADDRESS, pathway: "quick",
+      startedAt: "2026-08-29T12:47:02.330Z", submittedAt: "2026-08-29T12:50:31.744Z"
+    },
+    checkin: { method: "manual", ohip: "5930284617XY" },
+    visit: { problem: "Sore throat and fever for three days", pain: 4 }
+  }
+];
+
+/* ════════════════════════════════════════════════════════════════
+   Exporters — ported from app/js/exporters/*.js so what you
+   download here is byte-for-byte what the clinic system produces.
+   ════════════════════════════════════════════════════════════════ */
+
+const JOIN = "; ";
+
+const CSV_COLUMNS = [
+  ["submission_id",           s => s.meta.id],
+  ["submitted_at",            s => s.meta.submittedAt],
+  ["pathway",                 s => s.meta.pathway],
+  ["checkin_method",          s => s.checkin && s.checkin.method],
+  ["ohip",                    s => s.checkin && s.checkin.ohip],
+  ["first_name",              s => s.patient && s.patient.first],
+  ["last_name",               s => s.patient && s.patient.last],
+  ["dob",                     s => s.patient && s.patient.dob],
+  ["sex",                     s => s.patient && s.patient.sex],
+  ["marital_status",          s => s.patient && s.patient.marital],
+  ["address",                 s => s.patient && s.patient.address],
+  ["city",                    s => s.patient && s.patient.city],
+  ["province",                s => s.patient && s.patient.province],
+  ["postal_code",             s => s.patient && s.patient.postal],
+  ["home_phone",              s => s.patient && s.patient.homePhone],
+  ["cell_phone",              s => s.patient && s.patient.cellPhone],
+  ["email",                   s => s.patient && s.patient.email],
+  ["emergency_1_name",        s => at(s.emergencyContacts, 0, "name")],
+  ["emergency_1_phone",       s => at(s.emergencyContacts, 0, "phone")],
+  ["emergency_2_name",        s => at(s.emergencyContacts, 1, "name")],
+  ["emergency_2_phone",       s => at(s.emergencyContacts, 1, "phone")],
+  ["reason_for_visit",        s => s.visit && s.visit.problem],
+  ["onset",                   s => s.visit && s.visit.onset],
+  ["pain_0_10",               s => s.visit && s.visit.pain],
+  ["work_related_injury",     s => s.visit && s.visit.workInjury],
+  ["motor_vehicle_accident",  s => s.visit && s.visit.mva],
+  ["symptoms",                s => join(s.visit && s.visit.symptoms)],
+  ["symptom_other",           s => s.visit && s.visit.symptomOther],
+  ["symptom_frequency",       s => s.visit && s.visit.frequency],
+  ["symptom_trend",           s => s.visit && s.visit.trend],
+  ["no_known_drug_allergies", s => s.allergies && (s.allergies.noKnownDrugAllergies ? "yes" : "no")],
+  ["drug_allergies",          s => join(s.allergies && s.allergies.drugs)],
+  ["other_allergies",         s => s.allergies && s.allergies.other
+      ? s.allergies.other.map(a => a.allergen + " (" + (a.reaction || "reaction not stated") + ")").join(JOIN) : ""],
+  ["family_doctor_requested", s => s.familyDoctorRequested],
+  ["medical_history",         s => join(s.medicalHistory && s.medicalHistory.conditions)],
+  ["hepatitis_types",         s => join(s.medicalHistory && s.medicalHistory.hepatitisTypes)],
+  ["cancer_type",             s => s.medicalHistory && s.medicalHistory.cancerType],
+  ["past_surgeries",          s => join(s.surgeries && s.surgeries.items)],
+  ["past_surgeries_other",    s => s.surgeries && s.surgeries.other],
+  ["prescription_meds",       s => meds(s.medications && s.medications.prescription)],
+  ["non_prescription_meds",   s => meds(s.medications && s.medications.nonPrescription)],
+  ["family_history",          s => join(s.familyHistory && s.familyHistory.conditions)],
+  ["family_history_other",    s => s.familyHistory && s.familyHistory.other],
+  ["pregnant",                s => s.familyHistory && s.familyHistory.pregnant],
+  ["pregnancy_weeks",         s => s.familyHistory && s.familyHistory.weeks],
+  ["consent_agreed",          s => s.consent && (s.consent.agreed ? "yes" : "no")],
+  ["consent_printed_name",    s => s.consent && s.consent.printedName],
+  ["consent_signed",          s => s.consent && (s.consent.signed ? "yes" : "no")]
+];
+
+function at(arr, i, key) { return arr && arr[i] ? arr[i][key] : ""; }
+function join(arr) { return arr && arr.length ? arr.join(JOIN) : ""; }
+function medText(m) { return [m.name, m.dose, m.frequency].filter(Boolean).join(" "); }
+function meds(arr) { return arr && arr.length ? arr.map(medText).join(JOIN) : ""; }
+
+// Excel evaluates a leading =, +, - or @ as a formula. The apostrophe keeps
+// a value like "-2 days ago" as text.
+function escapeCell(value) {
+  if (value == null || value === false) return "";
+  let text = String(value);
+  if (/^[=+\-@]/.test(text)) text = "'" + text;
+  return /[",\r\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+}
+
+const csvHeader = () => CSV_COLUMNS.map(c => c[0]).join(",");
+const csvRow = sub => CSV_COLUMNS.map(c => escapeCell(c[1](sub))).join(",");
+
+// A BOM so Excel on Windows opens UTF-8 accented names correctly.
+function toCsv(subs, opts) {
+  const withBom = !opts || opts.withBom !== false;
+  const rows = (Array.isArray(subs) ? subs : [subs]).map(csvRow);
+  return (withBom ? "﻿" : "") + csvHeader() + "\r\n" + rows.join("\r\n") + "\r\n";
+}
+
+/* ── plain-text clinical note ────────────────────────────────── */
+
+const painLabel = v =>
+  v === 0 ? "No pain" : v <= 3 ? "Mild pain" : v <= 6 ? "Moderate pain"
+  : v <= 9 ? "Severe pain" : "Worst pain possible";
+
+const yn = v => v === "yes" ? "Yes" : v === "no" ? "No" : v === "na" ? "N/A" : "Not stated";
+const or = (v, fb) => (v && String(v).trim()) ? String(v).trim() : (fb || "Not stated");
+const listOr = (a, fb) => a && a.length ? a.join(", ") : (fb || "None reported");
+
+function toClinicalNote(sub) {
+  const lines = [];
+  const push = (label, value) => lines.push(label + ": " + value);
+  const section = title => { lines.push("", title.toUpperCase()); };
+
+  const name = sub.patient
+    ? [sub.patient.first, sub.patient.last].filter(Boolean).join(" ")
+    : or(sub.consent && sub.consent.printedName, "Returning patient");
+
+  lines.push("PATIENT INTAKE — " + new Date(sub.meta.submittedAt).toLocaleString("en-CA"));
+  push("Patient", or(name));
+  if (sub.patient) {
+    push("DOB", or(sub.patient.dob));
+    push("Sex", or(sub.patient.sex));
+    push("Phone", or(sub.patient.cellPhone || sub.patient.homePhone));
+  }
+  push("Health number", or(sub.checkin && sub.checkin.ohip, "Not provided"));
+
+  section("Chief complaint");
+  lines.push(or(sub.visit && sub.visit.problem));
+
+  section("History of present illness");
+  push("Onset", or(sub.visit && sub.visit.onset));
+  push("Pain", (sub.visit ? sub.visit.pain : 0) + "/10 (" + painLabel(sub.visit && sub.visit.pain != null ? sub.visit.pain : 0) + ")");
+  if (sub.visit && sub.visit.frequency) push("Frequency", sub.visit.frequency);
+  if (sub.visit && sub.visit.trend) push("Trend", sub.visit.trend);
+  if (sub.visit && sub.visit.workInjury != null) push("Work-related injury", yn(sub.visit.workInjury));
+  if (sub.visit && sub.visit.mva != null) push("Motor vehicle accident", yn(sub.visit.mva));
+  if (sub.visit && sub.visit.symptoms) {
+    const symptoms = sub.visit.symptoms.slice();
+    if (sub.visit.symptomOther) symptoms.push(sub.visit.symptomOther + " (patient-reported)");
+    push("Associated symptoms", listOr(symptoms));
+  }
+
+  if (sub.allergies) {
+    section("Allergies");
+    if (sub.allergies.noKnownDrugAllergies) lines.push("No known drug allergies.");
+    else push("Drug allergies", listOr(sub.allergies.drugs));
+    (sub.allergies.other || []).forEach(a => {
+      lines.push("- " + a.allergen + ": " + or(a.reaction, "reaction not stated"));
+    });
+  }
+
+  if (sub.medicalHistory) {
+    section("Past medical history");
+    push("Conditions", listOr(sub.medicalHistory.conditions));
+    if (sub.medicalHistory.hepatitisTypes && sub.medicalHistory.hepatitisTypes.length) {
+      push("Hepatitis type", sub.medicalHistory.hepatitisTypes.join(", "));
+    }
+    if (sub.medicalHistory.cancerType) push("Cancer type", sub.medicalHistory.cancerType);
+  }
+
+  if (sub.surgeries) {
+    section("Past surgical history");
+    const items = sub.surgeries.items.slice();
+    if (sub.surgeries.other) items.push(sub.surgeries.other);
+    lines.push(listOr(items, "None reported"));
+  }
+
+  if (sub.medications) {
+    section("Medications");
+    const rx = sub.medications.prescription || [];
+    const otc = sub.medications.nonPrescription || [];
+    if (!rx.length && !otc.length) lines.push("None reported.");
+    rx.forEach(m => lines.push("- " + medText(m)));
+    otc.forEach(m => lines.push("- " + medText(m) + " (OTC)"));
+  }
+
+  if (sub.familyHistory) {
+    section("Family history");
+    const items = sub.familyHistory.conditions.slice();
+    if (sub.familyHistory.other) items.push(sub.familyHistory.other);
+    lines.push(listOr(items));
+    push("Pregnant", yn(sub.familyHistory.pregnant));
+    if (sub.familyHistory.pregnant === "yes" && sub.familyHistory.weeks) {
+      push("Gestational age", sub.familyHistory.weeks + " weeks");
+    }
+  }
+
+  if (sub.familyDoctorRequested) {
+    section("Administrative");
+    push("Requesting family doctor enrolment", yn(sub.familyDoctorRequested));
+  }
+
+  if (sub.consent) {
+    section("Consent");
+    push("Consent to treat", sub.consent.agreed ? "Given" : "NOT GIVEN");
+    push("Signed by", or(sub.consent.printedName));
+    push("Signature captured", sub.consent.signed ? "Yes" : "No");
+  }
+
+  lines.push("", "Patient-entered intake. Verify before relying on it clinically.");
+  return lines.join("\n");
+}
+
+/* ── FHIR R4 collection bundle ───────────────────────────────── */
+
+let uuidSeed = 0;
+function stableUuid(subId, n) {
+  // Deterministic per submission so re-rendering does not churn ids.
+  const base = subId.replace(/-/g, "").padEnd(32, "0");
+  const tail = String(n).padStart(4, "0");
+  const hex = (base.slice(0, 12) + tail + base.slice(16, 32)).slice(0, 32);
+  return [hex.slice(0,8), hex.slice(8,12), "4" + hex.slice(13,16),
+          "a" + hex.slice(17,20), hex.slice(20,32)].join("-");
+}
+
+const cc = text => ({ text: text });
+const refTo = id => ({ reference: "urn:uuid:" + id });
+
+function toFhirBundle(sub) {
+  let n = 0;
+  const uuid = () => stableUuid(sub.meta.id, n++);
+  const entries = [];
+  const add = resource => {
+    entries.push({ fullUrl: "urn:uuid:" + resource.id, resource: resource });
+    return resource.id;
+  };
+
+  const patientId = uuid();
+  const patient = { resourceType: "Patient", id: patientId };
+  if (sub.patient) {
+    patient.name = [{
+      use: "official",
+      family: sub.patient.last || undefined,
+      given: [sub.patient.first].filter(Boolean)
+    }];
+    if (sub.patient.dob) patient.birthDate = sub.patient.dob;
+    const gender = { Female: "female", Male: "male", Other: "other" }[sub.patient.sex];
+    if (gender) patient.gender = gender;
+    else if (sub.patient.sex) patient.gender = "unknown";
+    const telecom = [];
+    if (sub.patient.cellPhone) telecom.push({ system: "phone", value: sub.patient.cellPhone, use: "mobile" });
+    if (sub.patient.homePhone) telecom.push({ system: "phone", value: sub.patient.homePhone, use: "home" });
+    if (sub.patient.email) telecom.push({ system: "email", value: sub.patient.email });
+    if (telecom.length) patient.telecom = telecom;
+    if (sub.patient.address || sub.patient.city || sub.patient.postal) {
+      patient.address = [{
+        line: [sub.patient.address].filter(Boolean),
+        city: sub.patient.city || undefined,
+        state: sub.patient.province || undefined,
+        postalCode: sub.patient.postal || undefined,
+        country: "CA"
+      }];
+    }
+    if (sub.patient.marital) patient.maritalStatus = cc(sub.patient.marital);
+  } else if (sub.consent && sub.consent.printedName) {
+    patient.name = [{ text: sub.consent.printedName }];
+  }
+  if (sub.checkin && sub.checkin.ohip) {
+    patient.identifier = [{
+      system: "https://fhir.infoway-inforoute.ca/NamingSystem/ca-on-patient-hcn",
+      value: sub.checkin.ohip
+    }];
+  }
+  (sub.emergencyContacts || []).forEach(c => {
+    patient.contact = patient.contact || [];
+    patient.contact.push({
+      relationship: [cc("Emergency contact")],
+      name: { text: c.name },
+      telecom: c.phone ? [{ system: "phone", value: c.phone }] : undefined
+    });
+  });
+  add(patient);
+
+  const encounterId = uuid();
+  add({
+    resourceType: "Encounter", id: encounterId, status: "in-progress",
+    class: { system: "http://terminology.hl7.org/CodeSystem/v3-ActCode", code: "EMER", display: "emergency" },
+    subject: refTo(patientId),
+    period: { start: sub.meta.submittedAt },
+    reasonCode: sub.visit && sub.visit.problem ? [cc(sub.visit.problem)] : undefined,
+    serviceProvider: { display: sub.meta.clinic }
+  });
+
+  const ctx = { encounter: refTo(encounterId), subject: refTo(patientId) };
+  const stamp = sub.meta.submittedAt;
+
+  if (sub.visit && sub.visit.pain != null) {
+    add({
+      resourceType: "Observation", id: uuid(), status: "final",
+      code: { coding: [{ system: "http://loinc.org", code: "72514-3", display: "Pain severity - 0-10 verbal numeric rating" }] },
+      encounter: ctx.encounter, subject: ctx.subject, effectiveDateTime: stamp,
+      valueQuantity: { value: sub.visit.pain, system: "http://unitsofmeasure.org", code: "{score}" }
+    });
+  }
+
+  const symptoms = ((sub.visit && sub.visit.symptoms) || []).slice();
+  if (sub.visit && sub.visit.symptomOther) symptoms.push(sub.visit.symptomOther);
+  symptoms.forEach(text => {
+    add({
+      resourceType: "Condition", id: uuid(),
+      clinicalStatus: cc("active"), verificationStatus: cc("unconfirmed"),
+      category: [cc("Encounter Diagnosis")],
+      code: cc(text), encounter: ctx.encounter, subject: ctx.subject, recordedDate: stamp
+    });
+  });
+
+  ((sub.medicalHistory && sub.medicalHistory.conditions) || []).forEach(text => {
+    let label = text;
+    if (text === "Hepatitis" && sub.medicalHistory.hepatitisTypes.length) {
+      label = "Hepatitis " + sub.medicalHistory.hepatitisTypes.join("/");
+    } else if (text === "Cancer" && sub.medicalHistory.cancerType) {
+      label = "Cancer — " + sub.medicalHistory.cancerType;
+    }
+    add({
+      resourceType: "Condition", id: uuid(),
+      clinicalStatus: cc("active"), verificationStatus: cc("unconfirmed"),
+      category: [cc("Problem List Item")],
+      code: cc(label), subject: refTo(patientId), recordedDate: stamp
+    });
+  });
+
+  if (sub.allergies && sub.allergies.noKnownDrugAllergies) {
+    add({
+      resourceType: "AllergyIntolerance", id: uuid(),
+      clinicalStatus: cc("active"), verificationStatus: cc("confirmed"),
+      code: { coding: [{ system: "http://snomed.info/sct", code: "409137002", display: "No known drug allergy" }] },
+      patient: refTo(patientId), recordedDate: stamp
+    });
+  }
+  ((sub.allergies && sub.allergies.drugs) || []).forEach(drug => {
+    add({
+      resourceType: "AllergyIntolerance", id: uuid(),
+      clinicalStatus: cc("active"), verificationStatus: cc("unconfirmed"),
+      category: ["medication"], code: cc(drug),
+      patient: refTo(patientId), recordedDate: stamp
+    });
+  });
+  ((sub.allergies && sub.allergies.other) || []).forEach(a => {
+    add({
+      resourceType: "AllergyIntolerance", id: uuid(),
+      clinicalStatus: cc("active"), verificationStatus: cc("unconfirmed"),
+      code: cc(a.allergen), patient: refTo(patientId), recordedDate: stamp,
+      reaction: a.reaction ? [{ manifestation: [cc(a.reaction)] }] : undefined
+    });
+  });
+
+  const surgeries = ((sub.surgeries && sub.surgeries.items) || []).slice();
+  if (sub.surgeries && sub.surgeries.other) surgeries.push(sub.surgeries.other);
+  surgeries.forEach(text => {
+    add({ resourceType: "Procedure", id: uuid(), status: "completed", code: cc(text), subject: refTo(patientId) });
+  });
+
+  const allMeds = []
+    .concat(((sub.medications && sub.medications.prescription) || []).map(m => Object.assign({}, m, { otc: false })))
+    .concat(((sub.medications && sub.medications.nonPrescription) || []).map(m => Object.assign({}, m, { otc: true })));
+  allMeds.forEach(m => {
+    add({
+      resourceType: "MedicationStatement", id: uuid(), status: "active",
+      medicationCodeableConcept: cc(m.otc ? m.name + " (non-prescription)" : m.name),
+      subject: refTo(patientId), dateAsserted: stamp,
+      dosage: (m.dose || m.frequency) ? [{ text: [m.dose, m.frequency].filter(Boolean).join(" ") }] : undefined
+    });
+  });
+
+  const fam = ((sub.familyHistory && sub.familyHistory.conditions) || []).slice();
+  if (sub.familyHistory && sub.familyHistory.other) fam.push(sub.familyHistory.other);
+  if (fam.length) {
+    add({
+      resourceType: "FamilyMemberHistory", id: uuid(), status: "completed",
+      patient: refTo(patientId), date: stamp,
+      relationship: cc("Immediate family"),
+      condition: fam.map(text => ({ code: cc(text) }))
+    });
+  }
+
+  if (sub.consent) {
+    add({
+      resourceType: "Consent", id: uuid(),
+      status: sub.consent.agreed ? "active" : "rejected",
+      scope: { coding: [{ system: "http://terminology.hl7.org/CodeSystem/consentscope", code: "treatment" }] },
+      category: [{ coding: [{ system: "http://terminology.hl7.org/CodeSystem/v3-ActCode", code: "IDSCL" }] }],
+      patient: refTo(patientId),
+      dateTime: sub.consent.signedAt || stamp
+    });
+  }
+
+  return { resourceType: "Bundle", id: sub.meta.id, type: "collection", timestamp: stamp, entry: entries };
+}
+
+/* ── staff receipt sections ──────────────────────────────────── */
+
+const DASH = "—";
+const orDash = v => (v != null && String(v).trim() !== "" ? String(v) : DASH);
+const listDash = a => (a && a.length ? a.join(", ") : DASH);
+const ynDash = v => v === "yes" ? "Yes" : v === "no" ? "No" : v === "na" ? "N/A" : DASH;
+
+function receiptSections(sub) {
+  if (sub.meta.pathway === "quick") {
+    return [{
+      title: "Quick check-in",
+      rows: [
+        { label: "Method", value: orDash(sub.checkin.method) },
+        { label: "Health number", value: orDash(sub.checkin.ohip) },
+        { label: "Reason for visit", value: orDash(sub.visit.problem) },
+        { label: "Pain (0–10)", value: String(sub.visit.pain) }
+      ]
+    }];
+  }
+
+  const p = sub.patient || {};
+  const sections = [
+    { title: "Patient information", rows: [
+      { label: "Name", value: orDash([p.first, p.last].filter(Boolean).join(" ")) },
+      { label: "Date of birth", value: orDash(p.dob) },
+      { label: "Sex", value: orDash(p.sex) },
+      { label: "Marital status", value: orDash(p.marital) },
+      { label: "Phone", value: orDash(p.cellPhone || p.homePhone) },
+      { label: "Email", value: orDash(p.email) },
+      { label: "Address", value: orDash([p.address, p.city, p.province, p.postal].filter(Boolean).join(", ")) }
+    ]},
+    { title: "Check-in", rows: [
+      { label: "Method", value: orDash(sub.checkin.method) },
+      { label: "Health number", value: orDash(sub.checkin.ohip) }
+    ]},
+    { title: "Emergency contacts", rows: (sub.emergencyContacts || []).length
+      ? sub.emergencyContacts.map(c => ({ label: c.name, value: orDash(c.phone) }))
+      : [{ label: "None given", value: DASH }] },
+    { title: "Reason for visit", rows: [
+      { label: "Problem", value: orDash(sub.visit.problem) },
+      { label: "Onset", value: orDash(sub.visit.onset) },
+      { label: "Pain (0–10)", value: sub.visit.pain + " — " + painLabel(sub.visit.pain) },
+      { label: "Work injury", value: ynDash(sub.visit.workInjury) },
+      { label: "Motor vehicle accident", value: ynDash(sub.visit.mva) },
+      { label: "Symptoms", value: listDash(sub.visit.symptoms) },
+      { label: "Frequency", value: orDash(sub.visit.frequency) },
+      { label: "Trend", value: orDash(sub.visit.trend) }
+    ]},
+    { title: "Allergies", rows: [
+      { label: "Drug allergies", value: sub.allergies.noKnownDrugAllergies ? "None known" : listDash(sub.allergies.drugs) }
+    ].concat(sub.allergies.other.map(a => ({ label: a.allergen, value: orDash(a.reaction) }))) },
+    { title: "Family doctor", rows: [{ label: "Becoming a patient", value: ynDash(sub.familyDoctorRequested) }] }
+  ];
+
+  if (sub.medicalHistory) {
+    sections.push({ title: "Medical history", rows: [
+      { label: "Conditions", value: listDash(sub.medicalHistory.conditions) }
+    ].concat(sub.medicalHistory.cancerType ? [{ label: "Cancer type", value: sub.medicalHistory.cancerType }] : []) });
+
+    sections.push({ title: "Past surgeries", rows: [
+      { label: "Surgeries", value: listDash(sub.surgeries.items) },
+      { label: "Other", value: orDash(sub.surgeries.other) }
+    ]});
+
+    const medRows = []
+      .concat(sub.medications.prescription.map(m => ({ label: m.name, value: orDash([m.dose, m.frequency].filter(Boolean).join(" ")) })))
+      .concat(sub.medications.nonPrescription.map(m => ({ label: m.name + " (OTC)", value: orDash([m.dose, m.frequency].filter(Boolean).join(" ")) })));
+    sections.push({ title: "Medications", rows: medRows.length ? medRows : [{ label: "None reported", value: DASH }] });
+
+    sections.push({ title: "Family history", rows: [
+      { label: "Conditions", value: listDash(sub.familyHistory.conditions) },
+      { label: "Pregnant", value: ynDash(sub.familyHistory.pregnant) }
+    ]});
+  }
+
+  if (sub.consent) {
+    sections.push({ title: "Consent", rows: [
+      { label: "Agreed", value: sub.consent.agreed ? "Yes" : "No" },
+      { label: "Printed name", value: orDash(sub.consent.printedName) },
+      { label: "Signature captured", value: sub.consent.signed ? "Yes" : "No" }
+    ]});
+  }
+
+  return sections;
+}
+
+/* ── filenames, as the desk service builds them ──────────────── */
+
+const pad = n => String(n).padStart(2, "0");
+
+function baseName(sub) {
+  const d = new Date(sub.meta.submittedAt);
+  const stamp = d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate())
+    + "_" + pad(d.getHours()) + pad(d.getMinutes());
+  const lastRaw = ((sub.patient && sub.patient.last) || (sub.consent && sub.consent.printedName) || "Patient").trim();
+  const last = lastRaw.split(/\s+/).pop();
+  const first = ((sub.patient && sub.patient.first) || "").trim().split(/\s+/)[0] || "";
+  const safe = s => s.normalize("NFKD").replace(/[^A-Za-z0-9]/g, "");
+  const name = [safe(last), safe(first)].filter(Boolean).join("_") || "Patient";
+  return "Intake_" + name + "_" + stamp + "_" + sub.meta.id.slice(0, 8);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   Console
+   ════════════════════════════════════════════════════════════════ */
+
+const $  = sel => document.querySelector(sel);
+const el = (tag, cls, text) => {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+};
+
+const STATE_LABEL = { new: "New", sent: "Sent", queued: "Queued" };
+
+let activeFilter = "all";
+let selectedId = SUBMISSIONS[0].meta.id;
+let activeTab = "summary";
+
+const displayName = sub => sub.patient
+  ? [sub.patient.first, sub.patient.last].filter(Boolean).join(" ")
+  : ((sub.consent && sub.consent.printedName) || "Returning patient");
+
+const byId = id => SUBMISSIONS.find(s => s.meta.id === id);
+
+function visible() {
+  return activeFilter === "all" ? SUBMISSIONS : SUBMISSIONS.filter(s => s._state === activeFilter);
+}
+
+function renderList() {
+  const list = $("#list");
+  list.textContent = "";
+  const rows = visible();
+
+  if (!rows.length) {
+    const empty = el("div", null, "Nothing in this view.");
+    empty.style.cssText = "padding:28px 16px;color:var(--ink-3);font-size:14.5px;";
+    list.appendChild(empty);
+    return;
+  }
+
+  rows.forEach(sub => {
+    const row = el("button", "row");
+    row.type = "button";
+    row.setAttribute("role", "option");
+    row.setAttribute("aria-selected", String(sub.meta.id === selectedId));
+    row.dataset.id = sub.meta.id;
+
+    const left = el("div");
+    left.appendChild(el("div", "row-name", displayName(sub)));
+    const meta = el("div", "row-meta",
+      (sub.checkin.ohip || "no health number") + "  ·  " + sub._receivedAgo
+      + "  ·  " + (sub.meta.pathway === "quick" ? "quick check-in" : "full registration"));
+    left.appendChild(meta);
+
+    const chip = el("span", "chip chip-" + sub._state, STATE_LABEL[sub._state]);
+
+    row.appendChild(left);
+    row.appendChild(chip);
+    row.appendChild(el("div", "row-reason", sub.visit.problem));
+
+    row.addEventListener("click", () => {
+      selectedId = sub.meta.id;
+      activeTab = "summary";
+      $("#console").dataset.view = "detail";
+      render();
+    });
+
+    list.appendChild(row);
+  });
+}
+
+function payloadPreview(sub) {
+  const clone = JSON.parse(JSON.stringify(sub));
+  delete clone._state; delete clone._receivedAgo; delete clone._error; delete clone._sentAt;
+  return clone;
+}
+
+const TABS = [
+  ["summary", "Summary"],
+  ["note",    "Clinical note"],
+  ["json",    "Submission JSON"],
+  ["csv",     "CSV row"],
+  ["fhir",    "FHIR R4"]
+];
+
+function renderDetail() {
+  const pane = $("#detail");
+  pane.textContent = "";
+  const sub = byId(selectedId);
+  if (!sub) return;
+
+  /* header */
+  const head = el("div", "detail-head");
+
+  const back = el("button", "detail-back", "‹ All submissions");
+  back.type = "button";
+  back.addEventListener("click", () => { $("#console").dataset.view = "list"; });
+  head.appendChild(back);
+
+  const h = el("h3", null, displayName(sub));
+  head.appendChild(h);
+
+  const facts = el("div", "detail-facts");
+  const fact = (label, value) => {
+    const s = el("span");
+    s.appendChild(el("b", null, label + " "));
+    s.appendChild(document.createTextNode(value));
+    facts.appendChild(s);
+  };
+  fact("HCN", sub.checkin.ohip || "not provided");
+  fact("Ref", sub.meta.id.slice(0, 8));
+  fact("Filed", baseName(sub) + ".pdf");
+  head.appendChild(facts);
+  pane.appendChild(head);
+
+  /* actions */
+  const actions = el("div", "actions");
+
+  const send = el("button", "btn btn-primary");
+  send.type = "button";
+  send.textContent = sub._state === "sent" ? "Re-send to Alembico" : "Send to Alembico";
+  send.addEventListener("click", () => openSendModal(sub));
+  actions.appendChild(send);
+
+  const copyNote = el("button", "btn", "Copy note");
+  copyNote.type = "button";
+  copyNote.addEventListener("click", () => {
+    copy(toClinicalNote(sub), "Clinical note copied — this is what staff paste into Alembico today.");
+  });
+  actions.appendChild(copyNote);
+
+  const dlJson = el("button", "btn", "Download JSON");
+  dlJson.type = "button";
+  dlJson.addEventListener("click", () => {
+    offerFile(baseName(sub) + ".json", JSON.stringify(payloadPreview(sub), null, 2));
+  });
+  actions.appendChild(dlJson);
+
+  const dlCsv = el("button", "btn", "Download CSV");
+  dlCsv.type = "button";
+  dlCsv.addEventListener("click", () => offerFile(baseName(sub) + ".csv", toCsv(sub)));
+  actions.appendChild(dlCsv);
+
+  pane.appendChild(actions);
+
+  /* tabs */
+  const tabs = el("div", "tabs");
+  tabs.setAttribute("role", "tablist");
+  TABS.forEach(t => {
+    const b = el("button", "tab", t[1]);
+    b.type = "button";
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-selected", String(activeTab === t[0]));
+    b.addEventListener("click", () => { activeTab = t[0]; renderDetail(); });
+    tabs.appendChild(b);
+  });
+  pane.appendChild(tabs);
+
+  /* pane content */
+  const body = el("div", "pane");
+
+  if (sub._state === "queued" && sub._error) {
+    const warn = el("div", "warnbox");
+    warn.appendChild(el("strong", null, "Queued for retry. "));
+    warn.appendChild(document.createTextNode(sub._error + " The PDF is already filed in OneDrive — nothing is lost."));
+    body.appendChild(warn);
+  }
+
+  if (activeTab === "summary") {
+    receiptSections(sub).forEach(section => {
+      body.appendChild(el("div", "sec-title", section.title));
+      const dl = el("dl", "kv");
+      section.rows.forEach(r => {
+        dl.appendChild(el("dt", null, r.label));
+        dl.appendChild(el("dd", null, r.value));
+      });
+      body.appendChild(dl);
+    });
+  } else {
+    const hints = {
+      note: "Plain text, laid out for an EMR encounter. This is what a staff member selects and pastes today, and what we would send as the encounter body.",
+      json: "The canonical submission. Every other format below is derived from this one object. The signature PNG is omitted here for length.",
+      csv:  "One row per submission, fixed column order. A field a pathway did not collect comes through empty rather than shifting the header.",
+      fhir: "FHIR R4 collection bundle. Checklist items carry text only, not SNOMED or ICD codes — that mapping is yours to specify."
+    };
+    body.appendChild(el("p", "hint", hints[activeTab]));
+
+    const text =
+      activeTab === "note" ? toClinicalNote(sub) :
+      activeTab === "json" ? JSON.stringify(payloadPreview(sub), null, 2) :
+      activeTab === "csv"  ? csvHeader() + "\n" + csvRow(sub) :
+                             JSON.stringify(toFhirBundle(sub), null, 2);
+
+    const pre = el("pre", "code" + (activeTab === "note" ? " wrap-text" : ""), text);
+    body.appendChild(pre);
+
+    const bar = el("div");
+    bar.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;";
+
+    const c = el("button", "btn", "Copy");
+    c.type = "button";
+    c.addEventListener("click", () => copy(text, "Copied to clipboard."));
+    bar.appendChild(c);
+
+    const exts = { note: ".txt", json: ".json", csv: ".csv", fhir: ".fhir.json" };
+    const d = el("button", "btn", "Download " + exts[activeTab]);
+    d.type = "button";
+    d.addEventListener("click", () => {
+      const payload = activeTab === "csv" ? toCsv(sub) : text;
+      offerFile(baseName(sub) + exts[activeTab], payload);
+    });
+    bar.appendChild(d);
+
+    body.appendChild(bar);
+  }
+
+  pane.appendChild(body);
+}
+
+function render() {
+  renderList();
+  renderDetail();
+  const unsent = SUBMISSIONS.filter(s => s._state === "new").length;
+  const count = $("#bellCount");
+  count.textContent = String(unsent);
+  count.style.display = unsent ? "" : "none";
+}
+
+/* ── send-to-Alembico modal ──────────────────────────────────── */
+
+function proposedRequest(sub) {
+  const body = {
+    externalId: sub.meta.id,
+    patientIdentifier: {
+      system: "ON-HCN",
+      value: sub.checkin.ohip || null
+    },
+    encounterDate: sub.meta.submittedAt,
+    source: "CareXPS digital intake v" + sub.meta.formVersion,
+    verified: false,
+    note: "<plain-text clinical note — see the Clinical note tab>",
+    attachments: [
+      { filename: baseName(sub) + ".pdf", contentType: "application/pdf", encoding: "base64", content: "<omitted>" }
+    ]
+  };
+  return "POST https://{alembico-host}/api/v1/encounters\n"
+    + "Authorization: Bearer {clinic-pc-credential}\n"
+    + "Content-Type: application/json\n"
+    + "Idempotency-Key: " + sub.meta.id + "\n\n"
+    + JSON.stringify(body, null, 2);
+}
+
+function openSendModal(sub) {
+  const body = $("#modalBody");
+  const foot = $("#modalFoot");
+  body.textContent = "";
+  foot.textContent = "";
+
+  $("#modalTitle").textContent = "Send " + displayName(sub) + " to Alembico";
+
+  const warn = el("div", "warnbox");
+  warn.appendChild(el("strong", null, "This request is our proposal, not Alembico's specification. "));
+  warn.appendChild(document.createTextNode(
+    "Every name below is a guess we made so there is something concrete to react to. Tell us the real endpoint, the real field names, and the real auth scheme, and this becomes one file change on the clinic PC."
+  ));
+  body.appendChild(warn);
+
+  body.appendChild(el("p", "hint",
+    "The health number is carried as a field in the body rather than in the filename — see “Matching on the health number” below for why."));
+
+  body.appendChild(el("pre", "code", proposedRequest(sub)));
+
+  const copyBtn = el("button", "btn", "Copy request");
+  copyBtn.type = "button";
+  copyBtn.addEventListener("click", () => copy(proposedRequest(sub), "Proposed request copied."));
+  foot.appendChild(copyBtn);
+
+  const simulate = el("button", "btn btn-primary", "Simulate send");
+  simulate.type = "button";
+  simulate.addEventListener("click", () => {
+    sub._state = "sent";
+    sub._sentAt = new Date().toISOString();
+    closeModal();
+    render();
+    toast("Simulated only — nothing left this page. In production the clinic PC would post this and mark the submission sent.");
+  });
+  foot.appendChild(simulate);
+
+  $("#modal").hidden = false;
+  $("#modalClose").focus();
+}
+
+function closeModal() { $("#modal").hidden = true; }
+
+/* ── export, copy, toast ─────────────────────────────────────── */
+
+let downloads = null;
+let downloadsResolved = false;
+
+if (window.claude && typeof window.claude.use === "function") {
+  window.claude.use("downloads")
+    .then(ns => { downloads = ns; downloadsResolved = true; })
+    .catch(() => { downloadsResolved = true; });
+}
+
+// Two hosting contexts, two mechanisms. Inside the Artifact viewer the page
+// is sandboxed and a self-started download is inert, so the save has to go
+// through the host. Served as an ordinary site — GitHub Pages, or the clinic
+// PC — a plain blob download is the better experience and needs no host.
+const IN_ARTIFACT = !!(window.claude && typeof window.claude.use === "function");
+
+function blobDownload(filename, data) {
+  try {
+    const blob = new Blob([data], { type: "application/octet-stream" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function offerFile(filename, data) {
+  if (!IN_ARTIFACT) {
+    if (blobDownload(filename, data)) { toast("Downloaded " + filename); return; }
+  } else if (downloads) {
+    try {
+      await downloads.save({ filename: filename, data: data });
+      toast("Saved " + filename);
+      return;
+    } catch (err) {
+      const code = err && err.code;
+      if (code === "declined") return;
+      if (code === "rate_limited") { toast("A save prompt is already open — finish that one first."); return; }
+      toast("Could not save the file here. Copying it to your clipboard instead.");
+    }
+  }
+  const ok = await copyRaw(data);
+  toast(ok
+    ? "Downloads are not available in this view, so " + filename + " was copied to your clipboard instead."
+    : "Downloads are not available in this view. Select the text in the panel and copy it manually.");
+}
+
+async function copyRaw(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (e) { /* fall through */ }
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;top:-1000px;opacity:0;";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e) { return false; }
+}
+
+async function copy(text, message) {
+  const ok = await copyRaw(text);
+  toast(ok ? message : "Could not reach the clipboard — select the text in the panel and copy it manually.");
+}
+
+function toast(message) {
+  const box = $("#toasts");
+  const t = el("div", "toast", message);
+  box.appendChild(t);
+  setTimeout(() => {
+    t.style.transition = "opacity .3s";
+    t.style.opacity = "0";
+    setTimeout(() => t.remove(), 320);
+  }, 4600);
+}
+
+/* ── wiring ──────────────────────────────────────────────────── */
+
+$("#filters").addEventListener("click", e => {
+  const btn = e.target.closest(".filter");
+  if (!btn) return;
+  activeFilter = btn.dataset.filter;
+  Array.prototype.forEach.call($("#filters").children, b => {
+    b.setAttribute("aria-pressed", String(b === btn));
+  });
+  const rows = visible();
+  if (rows.length && !rows.some(s => s.meta.id === selectedId)) {
+    selectedId = rows[0].meta.id;
+    activeTab = "summary";
+  }
+  render();
+});
+
+$("#bell").addEventListener("click", () => {
+  const pending = SUBMISSIONS.filter(s => s._state === "new");
+  if (!pending.length) {
+    toast("Nothing waiting. Every submission today has been pushed or queued.");
+    return;
+  }
+  activeFilter = "new";
+  Array.prototype.forEach.call($("#filters").children, b => {
+    b.setAttribute("aria-pressed", String(b.dataset.filter === "new"));
+  });
+  selectedId = pending[0].meta.id;
+  activeTab = "summary";
+  render();
+  toast(pending.length === 1
+    ? "1 submission is filed in OneDrive and waiting to reach a chart."
+    : pending.length + " submissions are filed in OneDrive and waiting to reach a chart.");
+});
+
+$("#exportAllCsv").addEventListener("click", () => {
+  offerFile("carexps-intake-2026-08-29.csv", toCsv(SUBMISSIONS));
+});
+
+$("#exportAllJson").addEventListener("click", () => {
+  offerFile("carexps-intake-2026-08-29.json", JSON.stringify(SUBMISSIONS.map(payloadPreview), null, 2));
+});
+
+$("#modalClose").addEventListener("click", closeModal);
+$("#modal").addEventListener("click", e => { if (e.target === $("#modal")) closeModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#modal").hidden) closeModal(); });
+
+render();
+</script>
+</body>
+</html>

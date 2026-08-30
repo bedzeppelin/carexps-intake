@@ -6,6 +6,14 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8080", "--directory", "app", "--bind", "127.0.0.1"],
       "port": 8080
+    },
+    {
+      "//": "The assembled Pages site: landing page, console, form, samples.",
+      "//build": "Run the assemble step from .github/workflows/pages.yml first.",
+      "name": "site",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8081", "--directory", "_site", "--bind", "127.0.0.1"],
+      "port": 8081
     }
   ]
 }

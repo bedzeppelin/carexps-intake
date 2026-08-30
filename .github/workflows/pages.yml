@@ -1,0 +1,55 @@
+# Publishes the Alembico review site: the landing page, the staff console,
+# the live patient form, and the generated sample exports.
+name: Deploy demo site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time; a newer push supersedes an in-flight one.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Regenerate sample exports
+        # Built from the app's real exporters, so a change to an exporter can
+        # never leave a stale sample published alongside it.
+        run: node docs/samples/generate.mjs
+
+      - name: Assemble site
+        run: |
+          mkdir -p _site/form _site/samples
+          cp site/index.html site/console.html _site/
+          cp -r app/. _site/form/
+          cp docs/samples/*.json docs/samples/*.csv docs/samples/*.txt _site/samples/
+          # Jekyll would otherwise skip files and folders beginning with _.
+          touch _site/.nojekyll
+          echo "Published files:"
+          find _site -type f | sort
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CareXPS Intake — Alembico integration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root {
+  --paper: #F4F7F5; --surface: #FFFFFF; --surface-2: #EBF0EC;
+  --ink: #0D1B16; --ink-2: #3B4C46; --ink-3: #6C8078;
+  --line: #D6E0DA; --line-strong: #B9C8C0;
+  --accent: #0B6A4E; --accent-ink: #FFFFFF; --accent-soft: #E1F0E8;
+  --sig-warn: #8A5600; --sig-warn-bg: #FAEDD5;
+  --bar: #0A1713; --bar-2: #13261F; --bar-ink: #EAF3EE; --bar-ink-2: #93A9A0; --bar-line: #22382F;
+  --radius: 10px;
+  --font-display: "Bricolage Grotesque", "Instrument Sans", system-ui, sans-serif;
+  --font-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0A1310; --surface: #11201B; --surface-2: #182C25;
+    --ink: #E5EFE9; --ink-2: #A6BAB2; --ink-3: #788D85;
+    --line: #23392F; --line-strong: #345247;
+    --accent: #35D398; --accent-ink: #052016; --accent-soft: #103024;
+    --sig-warn: #E4B15A; --sig-warn-bg: #322510;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0A1310; --surface: #11201B; --surface-2: #182C25;
+  --ink: #E5EFE9; --ink-2: #A6BAB2; --ink-3: #788D85;
+  --line: #23392F; --line-strong: #345247;
+  --accent: #35D398; --accent-ink: #052016; --accent-soft: #103024;
+  --sig-warn: #E4B15A; --sig-warn-bg: #322510;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { font-family: var(--font-display); margin: 0; line-height: 1.15; text-wrap: balance; }
+a { color: var(--accent); }
+:where(a, button):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+.wrap { max-width: 940px; margin: 0 auto; padding: 0 20px; }
+
+.masthead { background: var(--bar); color: var(--bar-ink); border-bottom: 1px solid var(--bar-line); }
+.masthead .wrap { display: flex; align-items: center; gap: 12px; padding-block: 18px; flex-wrap: wrap; }
+.brand-mark {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; background: var(--bar-2); border: 1px solid var(--bar-line);
+  border-radius: 4px; padding: 4px 7px;
+}
+.brand-name { font-family: var(--font-display); font-weight: 600; font-size: 19px; letter-spacing: -0.015em; }
+.brand-sub { color: var(--bar-ink-2); font-size: 13px; }
+
+.intro { padding-block: 52px 30px; }
+.eyebrow {
+  font-family: var(--font-mono); font-size: 11.5px; font-weight: 500; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--accent); margin: 0 0 14px;
+}
+h1 { font-size: clamp(30px, 5.4vw, 46px); font-weight: 600; letter-spacing: -0.028em; }
+.lede { font-size: clamp(16.5px, 2.1vw, 18.5px); color: var(--ink-2); max-width: 62ch; margin: 18px 0 0; }
+.lede strong { color: var(--ink); font-weight: 600; }
+
+.synthetic {
+  display: inline-flex; align-items: center; gap: 7px; margin-top: 22px;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  background: var(--sig-warn-bg); color: var(--sig-warn); border-radius: 4px; padding: 6px 11px;
+}
+
+.cards { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); padding-block: 12px 8px; }
+.card {
+  display: flex; flex-direction: column; gap: 8px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 22px; text-decoration: none; color: inherit;
+}
+.card:hover { border-color: var(--accent); }
+.card-tag {
+  font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--accent);
+}
+.card h3 { font-size: 19px; font-weight: 600; letter-spacing: -0.018em; }
+.card p { margin: 0; font-size: 14.5px; color: var(--ink-2); }
+.card .go { margin-top: auto; padding-top: 10px; font-size: 14px; font-weight: 500; color: var(--accent); }
+.card.primary { background: var(--accent-soft); border-color: var(--accent); }
+
+section { padding-block: 34px; }
+section h2 { font-size: clamp(21px, 3.2vw, 26px); font-weight: 600; letter-spacing: -0.02em; }
+section > p { color: var(--ink-2); max-width: 64ch; margin: 12px 0 0; }
+
+.files { display: grid; gap: 8px; margin-top: 20px; }
+.file {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  padding: 12px 16px; text-decoration: none; color: inherit; min-height: 52px;
+}
+.file:hover { border-color: var(--accent); }
+.file-name { font-family: var(--font-mono); font-size: 13px; font-weight: 500; color: var(--ink); }
+.file-desc { font-size: 13.5px; color: var(--ink-3); margin-right: auto; }
+.file-dl { font-size: 13px; font-weight: 500; color: var(--accent); white-space: nowrap; }
+
+.note {
+  background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0; padding: 16px 18px; margin-top: 20px; max-width: 68ch;
+}
+.note p { margin: 0; font-size: 14.5px; color: var(--ink-2); }
+.note p + p { margin-top: 9px; }
+.note strong { color: var(--ink); }
+
+footer { border-top: 1px solid var(--line); margin-top: 40px; padding-block: 26px 46px; }
+footer p { font-size: 13.5px; color: var(--ink-3); margin: 0; max-width: 70ch; }
+footer p + p { margin-top: 8px; }
+
+@media (max-width: 620px) {
+  .intro { padding-block: 34px 22px; }
+  .brand-sub { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <span class="brand-mark">CareXPS</span>
+    <span class="brand-name">Digital Intake</span>
+    <span class="brand-sub">— Alembico integration review</span>
+  </div>
+</header>
+
+<div class="wrap intro">
+  <p class="eyebrow">For the Alembico integration team</p>
+  <h1>Three things to look at, in about ten minutes.</h1>
+  <p class="lede">
+    CareXPS Urgent Care replaced its paper intake form with a tablet flow. Completed forms reach the
+    front desk reliably today; what they cannot do is reach a patient's chart.
+    <strong>We need to know whether Alembico can accept them, and in what shape.</strong>
+  </p>
+  <span class="synthetic">All data here is synthetic — no real patients</span>
+</div>
+
+<div class="wrap">
+  <div class="cards">
+    <a class="card primary" href="console.html">
+      <span class="card-tag">Start here</span>
+      <h3>The staff console</h3>
+      <p>
+        Submissions arrive, staff are notified, and each one can be pushed to Alembico. Open a
+        submission to see the same data as a clinical note, JSON, CSV, or a FHIR R4 bundle, and press
+        <em>Send to Alembico</em> to see the exact request we propose.
+      </p>
+      <span class="go">Open the console →</span>
+    </a>
+
+    <a class="card" href="form/?mode=remote&amp;nosw=1">
+      <span class="card-tag">The source of the data</span>
+      <h3>The patient form</h3>
+      <p>
+        The actual intake flow, as a patient sees it on a tablet or phone. Fourteen screens, two
+        pathways. Nothing you enter is submitted anywhere — it finishes on a summary screen.
+      </p>
+      <span class="go">Try the form →</span>
+    </a>
+
+    <a class="card" href="console.html#ask">
+      <span class="card-tag">The written spec</span>
+      <h3>Integration notes</h3>
+      <p>
+        The data contract field by field, how a submission travels, the health-number matching
+        options, and the four questions we need answered. Section 1 is the actual ask.
+      </p>
+      <span class="go">Read the four questions →</span>
+    </a>
+  </div>
+
+  <section>
+    <h2>Sample files</h2>
+    <p>
+      Generated by the app's own exporters, so they are exactly what the clinic system produces — not
+      hand-written examples. Every one is synthetic test data.
+    </p>
+    <div class="files">
+      <a class="file" href="samples/full-registration.json" download>
+        <span class="file-name">full-registration.json</span>
+        <span class="file-desc">The canonical submission. Everything else derives from it.</span>
+        <span class="file-dl">Download</span>
+      </a>
+      <a class="file" href="samples/full-registration.csv" download>
+        <span class="file-name">full-registration.csv</span>
+        <span class="file-desc">One row, 48 fixed columns, UTF-8 with BOM.</span>
+        <span class="file-dl">Download</span>
+      </a>
+      <a class="file" href="samples/full-registration.fhir.json" download>
+        <span class="file-name">full-registration.fhir.json</span>
+        <span class="file-desc">FHIR R4 collection bundle — 19 resources.</span>
+        <span class="file-dl">Download</span>
+      </a>
+      <a class="file" href="samples/full-registration.txt" download>
+        <span class="file-name">full-registration.txt</span>
+        <span class="file-desc">The clinical note staff paste into Alembico today.</span>
+        <span class="file-dl">Download</span>
+      </a>
+      <a class="file" href="samples/quick-checkin.json" download>
+        <span class="file-name">quick-checkin.json</span>
+        <span class="file-desc">The reduced returning-patient shape — no patient or consent block.</span>
+        <span class="file-dl">Download</span>
+      </a>
+      <a class="file" href="samples/batch.csv" download>
+        <span class="file-name">batch.csv</span>
+        <span class="file-desc">Three submissions, one row each — the shape a bulk loader wants.</span>
+        <span class="file-dl">Download</span>
+      </a>
+    </div>
+  </section>
+
+  <section>
+    <h2>The short version</h2>
+    <div class="note">
+      <p>
+        <strong>Everything up to the chart already works.</strong> A patient fills the form on a tablet,
+        the clinic PC renders a PDF and files it into OneDrive within a couple of seconds, and the
+        front desk is notified. That part is built, durable, and in use.
+      </p>
+      <p>
+        <strong>The last step is not built, on purpose.</strong> Public listings say Alembico has no API;
+        Alembico's own marketing describes interface-level integrations. Rather than guess, the
+        integration ships as a documented but disabled stub — one file, one change, once you tell us
+        what to call.
+      </p>
+      <p>
+        <strong>What we need is an answer, not a build.</strong> An HTTP endpoint, an HL7 feed, a FHIR
+        endpoint, a watched folder, or a clear “there isn't one” — any of those unblocks us.
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <p>
+      CareXPS Urgent Care · 1030 Gordon St, Suite 102, Guelph, ON · integration review prepared for the
+      Alembico team.
+    </p>
+    <p>
+      Every name, health number, address and phone number on this site is synthetic test data created
+      for this review. No real patient information is present. The console runs entirely in your
+      browser and reaches no clinic system; the patient form submits nowhere.
+    </p>
+  </footer>
+</div>
+
+</body>
+</html>
