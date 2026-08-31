@@ -15,7 +15,27 @@ export class SubmitError extends Error {
   }
 }
 
+// Review site only. Stands in for the desk service so a form can be followed
+// from the tablet through to the staff console without a clinic PC.
+//
+// This is the one code path in the app that writes anything persistent, and it
+// is reachable only from `?mode=demo`. The kiosk and remote profiles never
+// touch it, so what they promise a patient — that nothing survives the session
+// — still holds. The console reads the same key.
+export const DEMO_KEY = 'carexps.demo.submissions';
+
+async function submitToBrowserStorage(payload) {
+  const raw = localStorage.getItem(DEMO_KEY);
+  const queue = raw ? JSON.parse(raw) : [];
+  // meta.id is the idempotency key, exactly as it is for the real service.
+  if (!queue.some(s => s.meta.id === payload.meta.id)) queue.unshift(payload);
+  localStorage.setItem(DEMO_KEY, JSON.stringify(queue));
+  return { ok: true, id: payload.meta.id, demo: true };
+}
+
 export async function submitOnce(payload) {
+  if (CONFIG.submitEndpoint === 'demo:local') return submitToBrowserStorage(payload);
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), CONFIG.submitTimeoutMs);
   try {

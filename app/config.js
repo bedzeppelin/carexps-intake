@@ -11,6 +11,12 @@
 //
 // A `?mode=` query parameter overrides the default, which is what the QR code
 // and the iframe src use.
+//
+// There is a third profile, `demo`, used only by the review site. It stands in
+// for the desk service with browser storage so a submission can be followed
+// end to end without a clinic PC. It is opt-in by URL and never reachable from
+// the kiosk or remote profiles, so the no-persistence guarantee those two make
+// to patients is unaffected. See `submit.js`.
 
 const DEFAULTS = {
   mode: 'kiosk',
@@ -40,11 +46,18 @@ const REMOTE_OVERRIDES = {
   kioskIdleMs: 0
 };
 
+// Review site only. `demo:local` is not a URL — submit.js recognises it and
+// writes to browser storage instead of making a request.
+const DEMO_OVERRIDES = {
+  submitEndpoint: 'demo:local',
+  kioskIdleMs: 0
+};
+
 function fromQuery() {
   const params = new URLSearchParams(location.search);
   const out = {};
   const mode = params.get('mode');
-  if (mode === 'kiosk' || mode === 'remote') out.mode = mode;
+  if (mode === 'kiosk' || mode === 'remote' || mode === 'demo') out.mode = mode;
   // Test hook — lets the idle timer be exercised without a three minute wait.
   // Only has an effect in kiosk mode, since that is the only profile that
   // arms the timer at all.
@@ -60,11 +73,16 @@ function fromQuery() {
 const query = fromQuery();
 const mode = query.mode || DEFAULTS.mode;
 
+const PROFILE = { remote: REMOTE_OVERRIDES, demo: DEMO_OVERRIDES };
+
 export const CONFIG = {
   ...DEFAULTS,
-  ...(mode === 'remote' ? REMOTE_OVERRIDES : {}),
+  ...(PROFILE[mode] || {}),
   ...query,
   mode
 };
 
-export const isKiosk = () => CONFIG.mode === 'kiosk';
+// The demo shows the staff summary, because following a form through to the
+// console is the whole point of it.
+export const isKiosk = () => CONFIG.mode === 'kiosk' || CONFIG.mode === 'demo';
+export const isDemo = () => CONFIG.mode === 'demo';

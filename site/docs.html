@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CareXPS Intake Documentation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/site.css">
+<style>
+  .doc { max-width: 760px; }
+  .doc h2 { font-size: clamp(20px, 3vw, 25px); font-weight: 600; margin: 44px 0 12px; }
+  .doc h3 { font-size: 17px; font-weight: 600; margin: 26px 0 8px; }
+  .doc p { color: var(--ink-2); margin: 12px 0; }
+  .doc ul, .doc ol { color: var(--ink-2); margin: 12px 0; padding-left: 22px; }
+  .doc li { margin: 5px 0; }
+  .doc code {
+    font-family: var(--font-mono); font-size: 0.87em;
+    background: var(--surface-2); padding: 1px 5px; border-radius: 3px; color: var(--ink);
+  }
+  .steps { counter-reset: step; list-style: none; padding: 0; margin: 18px 0; display: grid; gap: 10px; }
+  .steps li {
+    counter-increment: step; display: grid; grid-template-columns: auto 1fr; gap: 14px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px;
+  }
+  .steps li::before {
+    content: counter(step); font-family: var(--font-mono); font-size: 12px; font-weight: 500;
+    color: var(--accent); padding-top: 2px;
+  }
+  .steps b { color: var(--ink); font-weight: 600; display: block; margin-bottom: 2px; }
+  .steps span { font-size: 14.5px; }
+  .note {
+    background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0; padding: 14px 16px; margin: 18px 0;
+  }
+  .note p { margin: 0; font-size: 14.5px; }
+  .note p + p { margin-top: 8px; }
+  .doc table { min-width: 560px; font-size: 14px; }
+  .doc tbody td { padding: 9px 14px; }
+  .doc .table-scroll { border-radius: var(--radius); margin: 16px 0; }
+  td.k { font-family: var(--font-mono); font-size: 12.5px; color: var(--ink); white-space: nowrap; }
+  .toc { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 20px 0 0; padding: 0; list-style: none; }
+  .toc a { font-size: 14.5px; }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap bar-inner">
+    <a class="bar-brand" href="index.html">
+      <span class="bar-mark">CareXPS</span>
+      <span class="bar-name">Documentation</span>
+    </a>
+    <nav class="bar-nav">
+      <a href="form/?mode=demo&amp;nosw=1">Patient form</a>
+      <a href="console.html">Staff console</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap page doc">
+
+  <div class="page-head">
+    <h1>How the system works</h1>
+    <p class="sub">
+      What happens between a patient filling in the form and a file you can upload.
+    </p>
+  </div>
+
+  <ul class="toc">
+    <li><a href="#flow">The flow</a></li>
+    <li><a href="#exports">Export formats</a></li>
+    <li><a href="#fields">Field reference</a></li>
+    <li><a href="#naming">File naming</a></li>
+    <li><a href="#daily">The daily batch</a></li>
+  </ul>
+
+  <h2 id="flow">The flow</h2>
+  <p>
+    A patient fills in the form on a tablet at the front desk, or on their own phone. When they press
+    submit, this happens:
+  </p>
+
+  <ol class="steps">
+    <li><span><b>The form builds one submission object</b>
+      Every answer is collected into a single JSON object. This object is the only source of truth —
+      the PDF, the CSV, the clinical note and the FHIR bundle are all generated from it, so they
+      cannot disagree with each other.</span></li>
+    <li><span><b>It is sent to the clinic PC</b>
+      The tablet posts it over the clinic network. The PC writes it to a local queue and confirms it
+      to disk before doing anything else, so a power cut cannot lose a form.</span></li>
+    <li><span><b>The PC renders the PDF and files it</b>
+      A PDF laid out like the paper intake form is written into the clinic's OneDrive folder. Only
+      once that file is confirmed on disk does the tablet get a success response and clear the
+      patient's answers.</span></li>
+    <li><span><b>It appears in the staff console</b>
+      The front desk sees the form in the list, can open it, and can download it in any format.</span></li>
+    <li><span><b>Staff export what they need</b>
+      One form or a whole day, as PDFs, CSV, JSON, or all of it in a single archive.</span></li>
+  </ol>
+
+  <div class="note">
+    <p>
+      <b>On this review site,</b> steps 2 and 3 run in your browser instead of on a clinic PC — there is
+      no server here. A form you submit is held in your browser's own storage and appears in the
+      console immediately. Everything after that point is the real code: the same exporters, the same
+      PDF layout, the same filenames.
+    </p>
+    <p>
+      Try it: open the <a href="form/?mode=demo&amp;nosw=1">patient form</a>, fill it in, and it will be
+      waiting in the <a href="console.html">staff console</a>.
+    </p>
+  </div>
+
+  <h2 id="exports">Export formats</h2>
+  <p>
+    Four representations of the same submission. All four are available for a single form, and any of
+    them can be produced for a whole day at once.
+  </p>
+
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Format</th><th>Extension</th><th>What it is for</th></tr></thead>
+      <tbody>
+        <tr><td class="k">PDF</td><td class="k">.pdf</td>
+          <td>A copy of the completed intake form, laid out like the paper original, including the
+            patient's signature. This is the document to attach to a chart.</td></tr>
+        <tr><td class="k">CSV</td><td class="k">.csv</td>
+          <td>One row per form, 48 fixed columns. For a spreadsheet or a bulk import. UTF-8 with a
+            byte-order mark so Excel opens accented names correctly.</td></tr>
+        <tr><td class="k">JSON</td><td class="k">.json</td>
+          <td>The complete submission object, including everything the CSV flattens or omits.</td></tr>
+        <tr><td class="k">Clinical note</td><td class="k">.txt</td>
+          <td>Plain text, laid out for an encounter note. This is what staff paste into a chart
+            today.</td></tr>
+        <tr><td class="k">FHIR R4</td><td class="k">.fhir.json</td>
+          <td>A FHIR R4 collection bundle — Patient, Encounter, Condition, AllergyIntolerance,
+            MedicationStatement, Procedure, Observation and Consent resources.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>The CSV column order is fixed</h3>
+  <p>
+    Columns are declared explicitly rather than derived from the data, so the header is identical for
+    every export. A field a particular form did not collect comes through as an empty cell rather
+    than shifting the columns — which means a file with a quick check-in and a full registration in
+    it still lines up.
+  </p>
+
+  <h2 id="fields">Field reference</h2>
+  <p>
+    Every column in the CSV export, in order. This list is generated from the exporter itself when
+    this page loads, so it cannot drift from what the system actually produces.
+  </p>
+
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>#</th><th>Column</th><th>Notes</th></tr></thead>
+      <tbody id="fieldRows"></tbody>
+    </table>
+  </div>
+
+  <h3>Fields that need care</h3>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Field</th><th>Format</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td class="k">ohip</td><td class="k">10 digits + 0–2 letters</td>
+          <td>Separators stripped and upper-cased on export, so <code>1234-567-890-ab</code> and
+            <code>1234 567 890 AB</code> are not treated as two patients. The two-letter version code
+            is missing from some older cards, so it is optional; the ten digits are not.</td></tr>
+        <tr><td class="k">submission_id</td><td class="k">UUID</td>
+          <td>Generated on the tablet. Stable across retries, so it can be used to detect a form that
+            has already been imported.</td></tr>
+        <tr><td class="k">dob</td><td class="k">YYYY-MM-DD</td><td>ISO date, no time.</td></tr>
+        <tr><td class="k">submitted_at</td><td class="k">ISO 8601 UTC</td>
+          <td>When the patient pressed submit.</td></tr>
+        <tr><td class="k">pain_0_10</td><td class="k">integer 0–10</td>
+          <td>Exported to FHIR as LOINC <code>72514-3</code>.</td></tr>
+        <tr><td class="k">symptoms, medical_history,<br>drug_allergies, …</td><td class="k">semicolon-joined</td>
+          <td>Multi-select lists are joined with <code>;</code> in the CSV. The JSON keeps them as
+            arrays. Values are the patient-facing wording, not coded terminology.</td></tr>
+        <tr><td class="k">no_known_drug_allergies</td><td class="k">yes / no</td>
+          <td>An explicit answer, not an empty list. An empty <code>drug_allergies</code> with
+            <code>no</code> here means the question was skipped, not that there are none.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Two form types</h3>
+  <p>
+    A returning patient can use a quick check-in, which collects identity and reason for visit only.
+    A first-time patient does a full registration. A full registration also asks four extra sections
+    — medical history, past surgeries, medications and family history — but only if the patient is
+    signing up for a family doctor.
+  </p>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Section</th><th>Quick check-in</th><th>Full registration</th></tr></thead>
+      <tbody>
+        <tr><td class="k">meta, checkin, visit</td><td>Yes</td><td>Yes</td></tr>
+        <tr><td class="k">patient, emergencyContacts</td><td>—</td><td>Yes</td></tr>
+        <tr><td class="k">allergies, consent</td><td>—</td><td>Yes</td></tr>
+        <tr><td class="k">medicalHistory, surgeries,<br>medications, familyHistory</td><td>—</td>
+          <td>Only with a family doctor request</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="naming">File naming</h2>
+  <p>Every exported file for a single form uses the same stem:</p>
+  <pre class="code">4821567390AB_Mitchell_Sarah_2026-08-31_a7f3c891.pdf
+└──────────┘ └─────────────┘ └────────┘ └──────┘
+ health no.   last_first      date       reference</pre>
+  <p>
+    The health number comes first so files sort by patient, and so the number a chart is matched on
+    is visible without opening anything. The trailing reference is the first eight characters of the
+    submission id, which keeps two forms for the same patient on the same day from colliding.
+  </p>
+  <p>
+    A form submitted without a health number gets <code>NOHCN</code> in that position, so those stand
+    out in a folder listing rather than producing a file that looks like it has a number.
+  </p>
+
+  <h2 id="daily">The daily batch</h2>
+  <p>At the end of the day, from the staff console:</p>
+  <ol>
+    <li>Tick the forms to export, or use <b>Select all</b>.</li>
+    <li>Choose <b>Download PDFs</b> for the documents alone, <b>Download CSV</b> for a single
+      spreadsheet with one row per form, or <b>Download everything</b>.</li>
+    <li><b>Download everything</b> produces one <code>.zip</code> containing a PDF, a JSON file and a
+      clinical note for each form, plus a single CSV covering all of them.</li>
+  </ol>
+  <p>
+    Selecting a single form and choosing <b>Download PDFs</b> gives a plain PDF rather than an
+    archive, so a one-off export does not need unzipping.
+  </p>
+
+  <div class="note">
+    <p>
+      <b>Everything in these files is patient-entered and unverified.</b> Nobody at the clinic has
+      checked it. Every export says so in its footer. If it is being loaded into a chart, it belongs
+      wherever self-reported information belongs.
+    </p>
+  </div>
+
+</main>
+
+<script type="module">
+import { csvHeader } from './form/js/exporters/csv.js';
+
+// Descriptions are keyed by column name; the column list itself comes from the
+// exporter, so a column added there shows up here even without a description.
+const NOTES = {
+  submission_id: 'Stable identifier for this form. Same value on a retry.',
+  submitted_at: 'ISO 8601 timestamp, UTC.',
+  pathway: '"quick" or "full".',
+  checkin_method: 'How the patient identified themselves: scan, manual, or none.',
+  ohip: 'Ontario health number. Ten digits, optional two-letter version code.',
+  first_name: 'Full registration only.',
+  last_name: 'Full registration only.',
+  dob: 'YYYY-MM-DD.',
+  sex: 'Female, Male, Other, or Prefer not to say.',
+  marital_status: 'Single, Married, Common-law, Divorced, or Widowed.',
+  address: 'Street address.',
+  city: '',
+  province: 'Two-letter code. Defaults to ON.',
+  postal_code: '',
+  home_phone: '',
+  cell_phone: '',
+  email: '',
+  emergency_1_name: 'First emergency contact. Required on a full registration.',
+  emergency_1_phone: '',
+  emergency_2_name: 'Second emergency contact, optional.',
+  emergency_2_phone: '',
+  reason_for_visit: 'Free text, in the patient’s own words. Always present.',
+  onset: 'Free text, e.g. "Yesterday around 8pm".',
+  pain_0_10: 'Integer 0 to 10.',
+  work_related_injury: 'yes / no / blank.',
+  motor_vehicle_accident: 'yes / no / blank.',
+  symptoms: 'Semicolon-joined checklist.',
+  symptom_other: 'Free text the patient typed in.',
+  symptom_frequency: 'Constant, Intermittent, or Comes and goes.',
+  symptom_trend: 'Improving, Worsening, or Unchanged.',
+  no_known_drug_allergies: 'yes / no. An explicit answer.',
+  drug_allergies: 'Semicolon-joined checklist.',
+  other_allergies: 'Allergen with its reaction in brackets, semicolon-joined.',
+  family_doctor_requested: 'yes / no. Gates the four sections below.',
+  medical_history: 'Semicolon-joined checklist.',
+  hepatitis_types: 'A, B and/or C, only if Hepatitis was selected.',
+  cancer_type: 'Free text, only if Cancer was selected.',
+  past_surgeries: 'Semicolon-joined checklist.',
+  past_surgeries_other: 'Free text.',
+  prescription_meds: 'Name, dose and frequency per medication, semicolon-joined.',
+  non_prescription_meds: 'Same shape as prescription_meds.',
+  family_history: 'Semicolon-joined checklist.',
+  family_history_other: 'Free text.',
+  pregnant: 'yes / no / na.',
+  pregnancy_weeks: 'Only if pregnant is yes.',
+  consent_agreed: 'yes / no. Consent to treat.',
+  consent_printed_name: 'Typed by the patient.',
+  consent_signed: 'yes / no. Whether a signature was captured. The signature image itself is in the PDF and the JSON, not the CSV.'
+};
+
+const tbody = document.getElementById('fieldRows');
+csvHeader().split(',').forEach((name, i) => {
+  const tr = document.createElement('tr');
+  const n = document.createElement('td');
+  n.className = 'mono';
+  n.textContent = String(i + 1);
+  const k = document.createElement('td');
+  k.className = 'k';
+  k.textContent = name;
+  const note = document.createElement('td');
+  note.textContent = NOTES[name] || '';
+  tr.append(n, k, note);
+  tbody.appendChild(tr);
+});
+</script>
+</body>
+</html>

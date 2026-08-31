@@ -1,5 +1,4 @@
-# Publishes the Alembico review site: the landing page, the staff console,
-# the live patient form, and the generated sample exports.
+# Publishes the demo site: landing page, patient form, staff console, docs.
 name: Deploy demo site
 
 on:
@@ -23,18 +22,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Regenerate sample exports
-        # Built from the app's real exporters, so a change to an exporter can
-        # never leave a stale sample published alongside it.
-        run: node docs/samples/generate.mjs
-
       - name: Assemble site
+        # The console imports the app's own exporters straight out of form/,
+        # so there is nothing to build and no copy of them to keep in step.
         run: |
-          mkdir -p _site/form _site/samples
-          cp site/index.html site/console.html _site/
+          mkdir -p _site/form
+          cp -r site/. _site/
           cp -r app/. _site/form/
-          cp docs/samples/*.json docs/samples/*.csv docs/samples/*.txt _site/samples/
-          # Jekyll would otherwise skip files and folders beginning with _.
           touch _site/.nojekyll
           echo "Published files:"
           find _site -type f | sort

@@ -15,6 +15,7 @@ Built from the Claude Design prototype `CareXPS Intake.dc.html`.
 | **`desk-service/`** | Receives submissions, renders the PDF, files it into OneDrive. Also serves the app to the tablets. | The clinic Windows PC |
 | **`relay/`** | Handles submissions from the website embed and the QR path, which cannot reach the clinic PC. | Azure Functions, Canada Central |
 | **`embed/`** | Paste-in snippet for the doctor's Lovable site. | The marketing site |
+| **`site/`** | Demo site: landing page, staff console, documentation. Stands in for the PC service with browser storage so a form can be followed end to end. | GitHub Pages |
 
 `app/` works on its own. `desk-service/` is what makes it real. `relay/` covers
 the website path.
@@ -107,9 +108,6 @@ written to the log with the name redacted.
 
 - **Alembico API.** Everything downstream of "file the PDF" waits on this. When
   it is answered, `desk-service/src/alembico.js` is the only file that changes.
-  What Alembico needs from us, and the four questions we need answered, are
-  written up in **[docs/ALEMBICO-INTEGRATION.md](docs/ALEMBICO-INTEGRATION.md)**,
-  with generated sample exports in [`docs/samples/`](docs/samples).
 - **Where the app is hosted for the website path**, and whether the relay's
   email delivery is acceptable or should be switched to writing directly into
   OneDrive. That is a PHIPA question for whoever handles clinic compliance, not
