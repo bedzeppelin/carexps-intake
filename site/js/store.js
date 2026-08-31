@@ -16,11 +16,14 @@ const ADDRESS = '1030 Gordon St, Suite 102, Guelph, ON';
 export const SEEDED = [
   {
     meta: {
-      id: 'a7f3c891-4d02-4b16-9e58-2c7d10ab55f9', formVersion: '1.0',
+      id: 'a7f3c891-4d02-4b16-9e58-2c7d10ab55f9', formVersion: '1.1',
       clinic: CLINIC, clinicAddress: ADDRESS, pathway: 'full',
       startedAt: '2026-08-31T14:31:08.412Z', submittedAt: '2026-08-31T14:42:19.907Z'
     },
-    checkin: { method: 'manual', ohip: '4821567390AB' },
+    checkin: {
+      method: 'manual', ohip: '4821567390AB',
+      appointment: 'no', appointmentTime: ''
+    },
     visit: {
       problem: 'Severe right-sided abdominal pain since yesterday evening',
       onset: 'Yesterday around 8pm', pain: 8, workInjury: 'no', mva: 'no',
@@ -64,11 +67,16 @@ export const SEEDED = [
   },
   {
     meta: {
-      id: 'd5b8c2a4-30f7-4e93-b1c6-9a7f45d0e812', formVersion: '1.0',
+      id: 'd5b8c2a4-30f7-4e93-b1c6-9a7f45d0e812', formVersion: '1.1',
       clinic: CLINIC, clinicAddress: ADDRESS, pathway: 'quick',
       startedAt: '2026-08-31T12:47:02.330Z', submittedAt: '2026-08-31T12:50:31.744Z'
     },
-    checkin: { method: 'manual', ohip: '5930284617XY' },
+    checkin: {
+      method: 'none', ohip: '',
+      appointment: 'yes', appointmentTime: '13:15'
+    },
+    // No card on them, so name and date of birth are what identify this one.
+    patient: { first: 'David', last: 'Okonkwo', dob: '1979-05-22' },
     visit: { problem: 'Sore throat and fever for three days', pain: 4 }
   }
 ];

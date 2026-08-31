@@ -5,7 +5,9 @@
 import { CLINIC } from '../content.js';
 import { normalizeOhip } from '../state.js';
 
-export const FORM_VERSION = '1.0';
+// 1.1 added checkin.appointment / appointmentTime, and made `patient` present
+// on both pathways: a quick check-in now always carries first, last and dob.
+export const FORM_VERSION = '1.1';
 
 const clean = s => (typeof s === 'string' ? s.trim() : s);
 const nonEmpty = obj => Object.values(obj).some(v => clean(v));
@@ -33,7 +35,12 @@ export function buildSubmission(session, { includeSignature = true } = {}) {
     // Exported without separators and upper-cased, so a number typed as
     // "1234-567-890-ab" and one typed as "1234 567 890 AB" do not look like
     // two different patients downstream.
-    checkin: { method: d.checkin.method, ohip: normalizeOhip(d.checkin.ohip) },
+    checkin: {
+      method: d.checkin.method,
+      ohip: normalizeOhip(d.checkin.ohip),
+      appointment: d.checkin.appointment,
+      appointmentTime: clean(d.checkin.appointmentTime)
+    },
     visit: {
       problem: clean(d.visit.problem),
       onset: clean(d.visit.onset),
@@ -48,7 +55,14 @@ export function buildSubmission(session, { includeSignature = true } = {}) {
   };
 
   if (quick) {
-    // The returning-patient path collects identity and reason only.
+    // The returning-patient path collects identity and reason only — but it
+    // does collect identity. Name and date of birth are what let the clinic
+    // find the chart when someone arrives without their card.
+    out.patient = {
+      first: clean(d.patient.first),
+      last: clean(d.patient.last),
+      dob: d.patient.dob
+    };
     delete out.visit.onset;
     delete out.visit.symptoms;
     delete out.visit.symptomOther;

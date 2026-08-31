@@ -23,10 +23,17 @@ export function toClinicalNote(sub) {
   push('Patient', or(name));
   if (sub.patient) {
     push('DOB', or(sub.patient.dob));
-    push('Sex', or(sub.patient.sex));
-    push('Phone', or(sub.patient.cellPhone || sub.patient.homePhone));
+    // The quick pathway carries name and date of birth only, so skip the rows
+    // it never collects rather than printing "Not stated" against each.
+    if (sub.patient.sex !== undefined) push('Sex', or(sub.patient.sex));
+    if (sub.patient.cellPhone !== undefined || sub.patient.homePhone !== undefined) {
+      push('Phone', or(sub.patient.cellPhone || sub.patient.homePhone));
+    }
   }
   push('Health number', or(sub.checkin?.ohip, 'Not provided'));
+  push('Arrival', sub.checkin?.appointment === 'yes'
+    ? `Booked appointment${sub.checkin.appointmentTime ? ' at ' + sub.checkin.appointmentTime : ''}`
+    : sub.checkin?.appointment === 'no' ? 'Walk-in' : 'Not stated');
 
   section('Chief complaint');
   lines.push(or(sub.visit?.problem));

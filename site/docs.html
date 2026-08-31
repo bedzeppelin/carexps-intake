@@ -130,7 +130,7 @@
           <td>A copy of the completed intake form, laid out like the paper original, including the
             patient's signature. This is the document to attach to a chart.</td></tr>
         <tr><td class="k">CSV</td><td class="k">.csv</td>
-          <td>One row per form, 48 fixed columns. For a spreadsheet or a bulk import. UTF-8 with a
+          <td>One row per form, 50 fixed columns. For a spreadsheet or a bulk import. UTF-8 with a
             byte-order mark so Excel opens accented names correctly.</td></tr>
         <tr><td class="k">JSON</td><td class="k">.json</td>
           <td>The complete submission object, including everything the CSV flattens or omits.</td></tr>
@@ -199,18 +199,34 @@
     — medical history, past surgeries, medications and family history — but only if the patient is
     signing up for a family doctor.
   </p>
+  <p>
+    <b>Every form carries a name and a date of birth, on both pathways.</b> A patient is allowed to
+    arrive without their health card, so the card cannot be the only thing identifying them — a form
+    with no name, no date of birth and no number would be impossible to match to a chart or even to a
+    person. The health number is a second identifier when it is available, not the only one.
+  </p>
   <div class="table-scroll">
     <table>
       <thead><tr><th>Section</th><th>Quick check-in</th><th>Full registration</th></tr></thead>
       <tbody>
         <tr><td class="k">meta, checkin, visit</td><td>Yes</td><td>Yes</td></tr>
-        <tr><td class="k">patient, emergencyContacts</td><td>—</td><td>Yes</td></tr>
+        <tr><td class="k">patient</td><td>Name and date of birth</td><td>Full details</td></tr>
+        <tr><td class="k">emergencyContacts</td><td>—</td><td>Yes</td></tr>
         <tr><td class="k">allergies, consent</td><td>—</td><td>Yes</td></tr>
         <tr><td class="k">medicalHistory, surgeries,<br>medications, familyHistory</td><td>—</td>
           <td>Only with a family doctor request</td></tr>
       </tbody>
     </table>
   </div>
+
+  <h3>Appointments and walk-ins</h3>
+  <p>
+    Every form asks whether the patient has an appointment that day, and the time if they know it.
+    The staff console shows booked arrivals as a pill in the <b>Arrival</b> column so the front desk
+    can tell at a glance who is expected and who is waiting. In the FHIR bundle a booked visit is an
+    ambulatory encounter (<code>AMB</code>) and a walk-in is <code>EMER</code>, with the patient's own
+    answer carried in <code>Encounter.type</code>.
+  </p>
 
   <h2 id="naming">File naming</h2>
   <p>Every exported file for a single form uses the same stem:</p>
@@ -260,10 +276,12 @@ const NOTES = {
   submitted_at: 'ISO 8601 timestamp, UTC.',
   pathway: '"quick" or "full".',
   checkin_method: 'How the patient identified themselves: scan, manual, or none.',
-  ohip: 'Ontario health number. Ten digits, optional two-letter version code.',
-  first_name: 'Full registration only.',
-  last_name: 'Full registration only.',
-  dob: 'YYYY-MM-DD.',
+  ohip: 'Ontario health number. Ten digits, optional two-letter version code. Empty when the patient arrived without their card — name and date of birth identify them instead.',
+  has_appointment: 'yes / no. Booked appointment or walk-in.',
+  appointment_time: '24-hour local time, only when has_appointment is yes.',
+  first_name: 'Collected on every form, both pathways.',
+  last_name: 'Collected on every form, both pathways.',
+  dob: 'YYYY-MM-DD. Collected on every form, both pathways.',
   sex: 'Female, Male, Other, or Prefer not to say.',
   marital_status: 'Single, Married, Common-law, Divorced, or Widowed.',
   address: 'Street address.',

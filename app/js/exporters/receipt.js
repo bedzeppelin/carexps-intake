@@ -7,13 +7,22 @@ const or = v => (v != null && String(v).trim() !== '' ? String(v) : DASH);
 const listOr = a => (a && a.length ? a.join(', ') : DASH);
 const ynOr = v => v === 'yes' ? 'Yes' : v === 'no' ? 'No' : v === 'na' ? 'N/A' : DASH;
 
+const arrival = sub =>
+  sub.checkin?.appointment === 'yes'
+    ? `Appointment${sub.checkin.appointmentTime ? ' at ' + sub.checkin.appointmentTime : ''}`
+    : sub.checkin?.appointment === 'no' ? 'Walk-in' : DASH;
+
 export function receiptSections(sub) {
   if (sub.meta.pathway === 'quick') {
+    const q = sub.patient || {};
     return [{
       title: 'Quick Check-In',
       rows: [
+        { label: 'Name', value: or([q.first, q.last].filter(Boolean).join(' ')) },
+        { label: 'DOB', value: or(q.dob) },
         { label: 'Method', value: or(sub.checkin.method) },
         { label: 'OHIP #', value: or(sub.checkin.ohip) },
+        { label: 'Arrival', value: arrival(sub) },
         { label: 'Reason for visit', value: or(sub.visit.problem) },
         { label: 'Pain (0-10)', value: String(sub.visit.pain) }
       ]
@@ -38,7 +47,8 @@ export function receiptSections(sub) {
       title: 'Check-In',
       rows: [
         { label: 'Method', value: or(sub.checkin.method) },
-        { label: 'OHIP #', value: or(sub.checkin.ohip) }
+        { label: 'OHIP #', value: or(sub.checkin.ohip) },
+        { label: 'Arrival', value: arrival(sub) }
       ]
     },
     {

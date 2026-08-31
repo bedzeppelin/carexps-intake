@@ -54,6 +54,7 @@
           <th>Patient</th>
           <th>Health number</th>
           <th>Submitted</th>
+          <th>Arrival</th>
           <th>Type</th>
           <th class="col-actions"><span class="sr">Actions</span></th>
         </tr>
@@ -119,7 +120,7 @@ function render() {
   if (!submissions.length) {
     const tr = document.createElement('tr');
     const td = document.createElement('td');
-    td.colSpan = 6;
+    td.colSpan = 7;
     td.className = 'empty';
     td.textContent = 'No forms. Fill one in on the patient form, or reset the demo to bring the examples back.';
     tr.appendChild(td);
@@ -163,6 +164,18 @@ function render() {
     tdTime.className = 'mono';
     tdTime.textContent = timeOf(sub);
 
+    const tdArrival = document.createElement('td');
+    const booked = sub.checkin && sub.checkin.appointment === 'yes';
+    if (booked) {
+      const pill = document.createElement('span');
+      pill.className = 'pill';
+      pill.textContent = sub.checkin.appointmentTime
+        ? 'Appt ' + sub.checkin.appointmentTime : 'Appointment';
+      tdArrival.appendChild(pill);
+    } else {
+      tdArrival.textContent = sub.checkin && sub.checkin.appointment === 'no' ? 'Walk-in' : '—';
+    }
+
     const tdType = document.createElement('td');
     tdType.textContent = sub.meta.pathway === 'quick' ? 'Quick check-in' : 'Full registration';
 
@@ -186,7 +199,7 @@ function render() {
     del.addEventListener('click', () => remove([sub], displayName(sub)));
     tdActions.append(open, del);
 
-    tr.append(tdCheck, tdName, tdHcn, tdTime, tdType, tdActions);
+    tr.append(tdCheck, tdName, tdHcn, tdTime, tdArrival, tdType, tdActions);
     tbody.appendChild(tr);
   }
 

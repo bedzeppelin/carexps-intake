@@ -31,8 +31,14 @@ export function validateSubmission(body) {
   }
   if (!isObj(body.checkin)) throw new ValidationError('Missing checkin.');
   if (!isObj(body.visit)) throw new ValidationError('Missing visit.');
-  if (body.meta.pathway === 'full' && !isObj(body.patient)) {
-    throw new ValidationError('Full registration requires patient details.');
+  // Both pathways carry identity as of form version 1.1. A form that cannot be
+  // matched to a person is not worth filing, and a tablet sending one is
+  // broken rather than merely terse.
+  if (!isObj(body.patient)) {
+    throw new ValidationError('Submission is missing patient identity.');
+  }
+  if (typeof body.patient.last !== 'string' || !body.patient.last.trim()) {
+    throw new ValidationError('Submission is missing a patient last name.');
   }
   return body;
 }

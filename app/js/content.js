@@ -88,6 +88,13 @@ export const MARITAL_OPTIONS = ['Single', 'Married', 'Common-law', 'Divorced', '
 export const FREQUENCY_OPTIONS = ['Constant', 'Intermittent', 'Comes and goes'];
 export const TREND_OPTIONS = ['Improving', 'Worsening', 'Unchanged'];
 
+// Booked or walk-in. Asked on both pathways, because it decides which queue
+// the front desk puts someone in before anything clinical matters.
+export const APPOINTMENT_OPTIONS = [
+  ['yes', 'Yes, I have an appointment'],
+  ['no', "No, I'm a walk-in"]
+];
+
 export const CHECKIN_OPTIONS = [
   { id: 'scan',   title: 'Scan health card',    desc: 'Take a photo of the front of your OHIP card' },
   { id: 'manual', title: 'Enter OHIP number',   desc: 'Type your health number in manually' },

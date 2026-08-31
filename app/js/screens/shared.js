@@ -1,9 +1,9 @@
 // Pieces used by more than one screen.
 
 import { el } from '../dom.js';
-import { textField, chip, optionRow } from '../widgets.js';
+import { textField, chip, optionRow, yesNo } from '../widgets.js';
 import { setField, painLabel, painColor } from '../state.js';
-import { CHECKIN_OPTIONS } from '../content.js';
+import { CHECKIN_OPTIONS, APPOINTMENT_OPTIONS } from '../content.js';
 
 // Tracks which error slots belong to which validation key so a screen can
 // show or hide all of them in one call after validate() runs.
@@ -199,6 +199,75 @@ export function checkinBlock(session, tracker) {
 // refresh, and it keeps aria-pressed as the single source of visual truth.
 export function syncPressed(buttons, isOn) {
   buttons.forEach((b, i) => b.setAttribute('aria-pressed', isOn(i) ? 'true' : 'false'));
+}
+
+// Name and date of birth — the least that makes a form belong to somebody.
+//
+// The quick check-in screen uses this because it has no Patient Information
+// step. Without it a returning patient could pick "I don't have my card" and
+// submit a form carrying no name, no date of birth and no health number, which
+// the clinic cannot match to a chart or even to a person.
+//
+// It writes to the same `patient` fields the full pathway uses, so downstream
+// exports do not have to care which pathway produced them.
+export function identityBlock(session, tracker) {
+  const p = session.data.patient;
+
+  const first = textField({
+    label: 'First name', value: p.first, required: true,
+    errorText: 'First name is required',
+    onInput: v => { p.first = v; delete session.errors.first; }
+  });
+  const last = textField({
+    label: 'Last name', value: p.last, required: true,
+    errorText: 'Last name is required',
+    onInput: v => { p.last = v; delete session.errors.last; }
+  });
+  const dob = textField({
+    label: 'Date of birth', type: 'date', value: p.dob, required: true,
+    errorText: 'Date of birth is required',
+    onInput: v => { p.dob = v; delete session.errors.dob; }
+  });
+
+  tracker.add('first', first.error, first.input);
+  tracker.add('last', last.error, last.input);
+  tracker.add('dob', dob.error, dob.input);
+
+  const root = el('div', { class: 'grid-auto' }, [first.root, last.root, dob.root]);
+  return { root, refresh: () => tracker.refresh() };
+}
+
+// Booked or walk-in, with the time when they know it.
+export function appointmentBlock(session, tracker) {
+  const c = session.data.checkin;
+
+  const time = textField({
+    label: 'Appointment time', type: 'time', value: c.appointmentTime,
+    onInput: v => { c.appointmentTime = v; }
+  });
+
+  const group = yesNo('Do you have an appointment today?', c.appointment, v => {
+    c.appointment = v;
+    delete session.errors.appointment;
+    refresh();
+  }, APPOINTMENT_OPTIONS);
+
+  const error = el('div', {
+    class: 'field__error field__error--block', role: 'alert', hidden: true,
+    text: 'Please let us know whether you have an appointment'
+  });
+  tracker.add('appointment', error);
+
+  const root = el('div', {}, [group.root, error, time.root]);
+
+  function refresh() {
+    syncPressed(group.buttons, i => group.values[i] === c.appointment);
+    // Only worth asking for a time from someone who says they have one.
+    time.root.hidden = c.appointment !== 'yes';
+    tracker.refresh();
+  }
+  refresh();
+  return { root, refresh };
 }
 
 // Builds a chip per option and keeps them in sync with a string array in state.

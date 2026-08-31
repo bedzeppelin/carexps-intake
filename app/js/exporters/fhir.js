@@ -69,9 +69,20 @@ export function toFhirBundle(sub) {
   add(patient);
 
   const encounterId = uuid();
+  // A booked visit is ambulatory; an unbooked one at an urgent care is closer
+  // to emergency. Carrying the patient's own answer in `type` as well keeps it
+  // legible without having to infer it back out of the class code.
+  const booked = sub.checkin?.appointment === 'yes';
   add({
     resourceType: 'Encounter', id: encounterId, status: 'in-progress',
-    class: { system: 'http://terminology.hl7.org/CodeSystem/v3-ActCode', code: 'EMER', display: 'emergency' },
+    class: booked
+      ? { system: 'http://terminology.hl7.org/CodeSystem/v3-ActCode', code: 'AMB', display: 'ambulatory' }
+      : { system: 'http://terminology.hl7.org/CodeSystem/v3-ActCode', code: 'EMER', display: 'emergency' },
+    type: sub.checkin?.appointment
+      ? [cc(booked
+          ? `Booked appointment${sub.checkin.appointmentTime ? ' at ' + sub.checkin.appointmentTime : ''}`
+          : 'Walk-in')]
+      : undefined,
     subject: ref(patientId),
     period: { start: sub.meta.submittedAt },
     reasonCode: sub.visit?.problem ? [cc(sub.visit.problem)] : undefined,

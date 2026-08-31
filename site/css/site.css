@@ -157,7 +157,7 @@ a { color: var(--accent); }
   overflow-x: auto; background: var(--surface);
   border: 1px solid var(--line); border-radius: 0 0 var(--radius) var(--radius);
 }
-table { border-collapse: collapse; width: 100%; min-width: 640px; }
+table { border-collapse: collapse; width: 100%; min-width: 780px; }
 thead th {
   text-align: left; font-family: var(--font-mono); font-size: 10.5px; font-weight: 500;
   letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3);
@@ -171,6 +171,14 @@ tbody tr.is-open { background: var(--accent-soft); }
 .col-check input { width: 17px; height: 17px; accent-color: var(--accent); cursor: pointer; }
 .col-actions { width: 160px; text-align: right; white-space: nowrap; }
 .col-actions .btn + .btn { margin-left: 6px; }
+
+/* A booked arrival is the one row-level fact that changes what the front desk
+   does next, so it is the only thing in the table given a shape of its own. */
+.pill {
+  display: inline-block; padding: 2px 9px; border-radius: 999px;
+  font-family: var(--font-mono); font-size: 11px; white-space: nowrap;
+  background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent);
+}
 
 .empty { padding: 34px 16px; text-align: center; color: var(--ink-3); font-size: 14.5px; }
 

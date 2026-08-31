@@ -20,7 +20,7 @@ export function createSession() {
     staffView: false,
     startedAt: new Date().toISOString(),
     data: {
-      checkin: { method: null, ohip: '' },
+      checkin: { method: null, ohip: '', appointment: null, appointmentTime: '' },
       patient: {
         first: '', last: '', address: '', city: '', province: 'ON', postal: '',
         homePhone: '', cellPhone: '', email: '', dob: '', sex: '', marital: ''
@@ -119,7 +119,28 @@ export function validateCheckin(s, errs) {
     if (!c.ohip.trim()) errs.ohip = true;
     else if (!ohipLooksValid(c.ohip)) errs.ohipFormat = true;
   }
-  // 'none' is a deliberate answer, not an omission — nothing more to require.
+  // "I don't have my card" is allowed to collect nothing here, but only
+  // because name and date of birth are collected separately on every pathway.
+  // Without that, a returning patient could submit a form that identified
+  // nobody at all — see validateIdentity.
+  return errs;
+}
+
+// The minimum that makes a submission belong to a person. The full pathway
+// asks for these on its own Patient Information screen; the quick pathway has
+// no such screen, so it asks here.
+export function validateIdentity(s, errs) {
+  const p = s.data.patient;
+  if (!p.first.trim()) errs.first = true;
+  if (!p.last.trim()) errs.last = true;
+  if (!p.dob) errs.dob = true;
+  return errs;
+}
+
+// Booked or walk-in changes which queue the front desk puts someone in, so an
+// unanswered question here is no more useful than an unasked one.
+export function validateAppointment(s, errs) {
+  if (!s.data.checkin.appointment) errs.appointment = true;
   return errs;
 }
 
@@ -133,9 +154,12 @@ export function validate(s) {
 
   if (step === 'checkin') {
     validateCheckin(s, errs);
+    validateAppointment(s, errs);
   }
   if (step === 'quickCheckin') {
+    validateIdentity(s, errs);
     validateCheckin(s, errs);
+    validateAppointment(s, errs);
     if (!d.visit.problem.trim()) errs.problem = true;
   }
   if (step === 'patient') {
