@@ -73,9 +73,13 @@ export const SEEDED = [
   }
 ];
 
-export function readSubmitted() {
+// Seeded examples are constants, so deleting one cannot remove it from the
+// array — the ids of deleted ones are remembered here instead and filtered out.
+const HIDDEN_KEY = 'carexps.demo.hidden';
+
+function readList(key) {
   try {
-    const raw = localStorage.getItem(DEMO_KEY);
+    const raw = localStorage.getItem(key);
     const list = raw ? JSON.parse(raw) : [];
     return Array.isArray(list) ? list : [];
   } catch {
@@ -83,14 +87,39 @@ export function readSubmitted() {
   }
 }
 
-export function clearSubmitted() {
-  try { localStorage.removeItem(DEMO_KEY); } catch { /* nothing to clear */ }
+function writeList(key, list) {
+  try { localStorage.setItem(key, JSON.stringify(list)); } catch { /* storage unavailable */ }
+}
+
+export const readSubmitted = () => readList(DEMO_KEY);
+
+/** Removes one form. Works for both submitted and seeded rows. */
+export function removeSubmission(id) {
+  const kept = readSubmitted().filter(s => s.meta.id !== id);
+  writeList(DEMO_KEY, kept);
+  if (SEEDED.some(s => s.meta.id === id)) {
+    const hidden = readList(HIDDEN_KEY);
+    if (!hidden.includes(id)) writeList(HIDDEN_KEY, [...hidden, id]);
+  }
+}
+
+export function removeMany(ids) {
+  for (const id of ids) removeSubmission(id);
+}
+
+/** Back to a first-visit state: nothing submitted, both examples restored. */
+export function resetDemo() {
+  try {
+    localStorage.removeItem(DEMO_KEY);
+    localStorage.removeItem(HIDDEN_KEY);
+  } catch { /* nothing to clear */ }
 }
 
 /** Newest first, with the demo's own submissions above the seeded examples. */
 export function allSubmissions() {
+  const hidden = new Set(readList(HIDDEN_KEY));
   const submitted = readSubmitted().map(s => ({ ...s, _seeded: false }));
-  const seeded = SEEDED.map(s => ({ ...s, _seeded: true }));
+  const seeded = SEEDED.filter(s => !hidden.has(s.meta.id)).map(s => ({ ...s, _seeded: true }));
   return [...submitted, ...seeded];
 }
 

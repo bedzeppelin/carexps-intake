@@ -389,6 +389,13 @@ select:focus-visible, textarea:focus-visible, label.btn-upload:focus-within {
 .done__clinic-name { font-size: 13px; font-weight: 700; color: var(--navy-ink); margin-bottom: var(--s1); }
 .done__clinic-addr { font-size: 13px; color: var(--muted); }
 .done__actions { display: flex; flex-wrap: wrap; gap: var(--s3); justify-content: center; margin-bottom: var(--s5); }
+.done__next { margin-bottom: var(--s4); }
+/* Quiet on purpose: the countdown is a courtesy so the screen does not change
+   without warning, not something the patient has to act on. */
+.done__reset {
+  font-size: 13px; color: var(--muted); margin: 0;
+  font-variant-numeric: tabular-nums;
+}
 
 /* ---------- Staff receipt + exports ---------- */
 

@@ -37,13 +37,21 @@ const DEFAULTS = {
   kioskIdleMs: 3 * 60 * 1000,
   kioskWarnMs: 20 * 1000,
 
+  // How long the thank-you screen stays up before the form clears itself for
+  // the next patient. The idle timer above is the safety net for someone who
+  // walks away mid-form; this is the normal end of a completed visit, so it is
+  // much shorter. Zero disables it — set for the remote profile, where the
+  // page belongs to the patient and reloading it under them would be rude.
+  resetAfterMs: 20 * 1000,
+
   submitTimeoutMs: 20 * 1000,
   submitRetries: 2
 };
 
 const REMOTE_OVERRIDES = {
   submitEndpoint: null,   // set to the relay URL once it is deployed
-  kioskIdleMs: 0
+  kioskIdleMs: 0,
+  resetAfterMs: 0
 };
 
 // Review site only. `demo:local` is not a URL — submit.js recognises it and
@@ -82,7 +90,5 @@ export const CONFIG = {
   mode
 };
 
-// The demo shows the staff summary, because following a form through to the
-// console is the whole point of it.
-export const isKiosk = () => CONFIG.mode === 'kiosk' || CONFIG.mode === 'demo';
+export const isKiosk = () => CONFIG.mode === 'kiosk';
 export const isDemo = () => CONFIG.mode === 'demo';

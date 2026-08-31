@@ -42,6 +42,7 @@
       <button class="btn" type="button" id="dlPdf">Download PDFs</button>
       <button class="btn" type="button" id="dlCsv">Download CSV</button>
       <button class="btn btn-primary" type="button" id="dlAll">Download everything</button>
+      <button class="btn btn-danger" type="button" id="deleteSelected">Delete</button>
     </div>
   </div>
 
@@ -54,7 +55,7 @@
           <th>Health number</th>
           <th>Submitted</th>
           <th>Type</th>
-          <th class="col-open"><span class="sr">Open</span></th>
+          <th class="col-actions"><span class="sr">Actions</span></th>
         </tr>
       </thead>
       <tbody id="rows"></tbody>
@@ -62,9 +63,8 @@
   </div>
 
   <p class="foot-note">
-    Forms you submit on the <a href="form/?mode=demo&amp;nosw=1">patient form</a> appear here.
-    Two examples are seeded so the list is never empty.
-    <button class="link-btn" type="button" id="reset">Clear submitted forms</button>
+    Forms submitted on the <a href="form/?mode=demo&amp;nosw=1">patient form</a> appear here.
+    <button class="link-btn" type="button" id="reset">Reset the demo</button>
   </p>
 
   <section class="detail" id="detail" hidden></section>
@@ -78,7 +78,7 @@ import { toCsv, csvHeader, csvRow } from './form/js/exporters/csv.js';
 import { toFhirBundle } from './form/js/exporters/fhir.js';
 import { toClinicalNote } from './form/js/exporters/note.js';
 import { receiptSections } from './form/js/exporters/receipt.js';
-import { allSubmissions, clearSubmitted, displayName, baseName, readSubmitted } from './js/store.js';
+import { allSubmissions, removeMany, resetDemo, displayName, baseName, readSubmitted } from './js/store.js';
 import { renderIntakePdf } from './js/pdf.js';
 import { makeZip } from './js/zip.js';
 
@@ -116,6 +116,16 @@ function render() {
   const tbody = $('#rows');
   tbody.textContent = '';
 
+  if (!submissions.length) {
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = 6;
+    td.className = 'empty';
+    td.textContent = 'No forms. Fill one in on the patient form, or reset the demo to bring the examples back.';
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+  }
+
   for (const sub of submissions) {
     const tr = document.createElement('tr');
     if (sub.meta.id === openId) tr.className = 'is-open';
@@ -126,9 +136,12 @@ function render() {
     box.type = 'checkbox';
     box.checked = selected.has(sub.meta.id);
     box.setAttribute('aria-label', 'Select ' + displayName(sub));
+    // Only the toolbar depends on what is ticked, so re-render that and leave
+    // the rows alone. Rebuilding the table here would replace this very
+    // checkbox and throw away keyboard focus on every toggle.
     box.addEventListener('change', () => {
       if (box.checked) selected.add(sub.meta.id); else selected.delete(sub.meta.id);
-      render();
+      syncToolbar();
     });
     tdCheck.appendChild(box);
 
@@ -153,8 +166,8 @@ function render() {
     const tdType = document.createElement('td');
     tdType.textContent = sub.meta.pathway === 'quick' ? 'Quick check-in' : 'Full registration';
 
-    const tdOpen = document.createElement('td');
-    tdOpen.className = 'col-open';
+    const tdActions = document.createElement('td');
+    tdActions.className = 'col-actions';
     const open = document.createElement('button');
     open.type = 'button';
     open.className = 'btn btn-sm';
@@ -165,20 +178,32 @@ function render() {
       render();
       if (openId) $('#detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
-    tdOpen.appendChild(open);
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'btn btn-sm btn-danger';
+    del.textContent = 'Delete';
+    del.setAttribute('aria-label', 'Delete ' + displayName(sub));
+    del.addEventListener('click', () => remove([sub], displayName(sub)));
+    tdActions.append(open, del);
 
-    tr.append(tdCheck, tdName, tdHcn, tdTime, tdType, tdOpen);
+    tr.append(tdCheck, tdName, tdHcn, tdTime, tdType, tdActions);
     tbody.appendChild(tr);
   }
 
+  syncToolbar();
+  renderDetail();
+}
+
+function syncToolbar() {
   const all = $('#selectAll');
   all.checked = submissions.length > 0 && selected.size === submissions.length;
   all.indeterminate = selected.size > 0 && selected.size < submissions.length;
   $('#selectLabel').textContent = selected.size ? `${selected.size} selected` : 'Select all';
 
-  for (const id of ['dlPdf', 'dlCsv', 'dlAll']) $('#' + id).disabled = selected.size === 0;
-
-  renderDetail();
+  for (const id of ['dlPdf', 'dlCsv', 'dlAll', 'deleteSelected']) {
+    $('#' + id).disabled = selected.size === 0;
+  }
+  $('#deleteSelected').textContent = selected.size > 1 ? `Delete ${selected.size}` : 'Delete';
 }
 
 const TABS = [['summary', 'Summary'], ['note', 'Clinical note'], ['json', 'JSON'], ['csv', 'CSV'], ['fhir', 'FHIR R4']];
@@ -352,16 +377,34 @@ $('#dlAll').addEventListener('click', async () => {
 
 /* ── wiring ────────────────────────────────────────────────── */
 
+// Deleting is the one irreversible thing in here, so it always asks first and
+// always names what is going.
+function remove(list, label) {
+  if (!list.length) return;
+  const what = label || (list.length === 1 ? displayName(list[0]) : `${list.length} forms`);
+  if (!confirm(`Delete ${what}? This cannot be undone.`)) return;
+  const ids = list.map(s => s.meta.id);
+  removeMany(ids);
+  for (const id of ids) selected.delete(id);
+  if (ids.includes(openId)) openId = null;
+  load();
+  toast(`Deleted ${what}.`);
+}
+
+$('#deleteSelected').addEventListener('click', () => remove(chosen()));
+
 $('#selectAll').addEventListener('change', e => {
   selected = e.target.checked ? new Set(submissions.map(s => s.meta.id)) : new Set();
   render();
 });
 
 $('#reset').addEventListener('click', () => {
-  clearSubmitted();
+  if (!confirm('Reset the demo? Submitted forms are deleted and both examples come back.')) return;
+  resetDemo();
   openId = null;
+  selected = new Set();
   load();
-  toast('Cleared. The seeded examples remain.');
+  toast('Demo reset.');
 });
 
 function toast(message) {
